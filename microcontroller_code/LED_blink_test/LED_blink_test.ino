@@ -1,4 +1,4 @@
-char receivedChar;
+int receivedChar;
 bool newData;
 int ledState = 0;
 
