@@ -1,4 +1,4 @@
-int receivedChar;
+byte receivedChar;
 bool newData;
 int ledState = 0;
 
@@ -26,11 +26,12 @@ void loop() {
   }  
 
   if(newData){
-    Serial.print("Received byte: ");
-    Serial.println(receivedChar);
-    if(receivedChar == '0')
+    // Serial.print("Received byte: ");
+    Serial.write(receivedChar);
+    // Serial.println("");
+    if(receivedChar == 0)
       ledState = LOW;
-    else if(receivedChar == '1')
+    else if(receivedChar == 1)
       ledState = HIGH;
     newData = false;
   }

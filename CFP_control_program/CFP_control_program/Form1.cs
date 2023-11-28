@@ -37,6 +37,16 @@ namespace CFP_control_program
         {
             InitializeComponent();
             cbComResponse.Checked = true;
+            chkByte1.Checked = false;
+            chkByte2.Checked = false;
+            chkByte3.Checked = false;
+            chkByte4.Checked = false;
+            chkByte5.Checked = false;
+            txtByte1.Enabled = false;
+            txtByte2.Enabled = false;
+            txtByte3.Enabled = false;
+            txtByte4.Enabled = false;
+            txtByte5.Enabled = false;
             ComPortUpdate();
         }
 
@@ -217,6 +227,118 @@ namespace CFP_control_program
 
                 if (serialPort1.IsOpen)
                     serialPort1.Write(typedCharacter, 0, 1);
+            }
+        }
+
+        private void chkByte1_CheckedChanged(object sender, EventArgs e)
+        {
+            if (chkByte1.Checked == true)
+                txtByte1.Enabled = true;
+            else
+            {
+                txtByte1.Clear();
+                txtByte1.Enabled = false;
+            }
+        }
+
+        private void chkByte2_CheckedChanged(object sender, EventArgs e)
+        {
+            if (chkByte2.Checked == true)
+                txtByte2.Enabled = true;
+            else
+            {
+                txtByte2.Clear();
+                txtByte2.Enabled = false;
+            }
+        }
+
+        private void chkByte3_CheckedChanged(object sender, EventArgs e)
+        {
+            if (chkByte3.Checked == true)
+                txtByte3.Enabled = true;
+            else
+            {
+                txtByte3.Clear();
+                txtByte3.Enabled = false;
+            }
+        }
+
+        private void chkByte4_CheckedChanged(object sender, EventArgs e)
+        {
+            if (chkByte4.Checked == true)
+                txtByte4.Enabled = true;
+            else
+            {
+                txtByte4.Clear();
+                txtByte4.Enabled = false;
+            }
+        }
+
+        private void chkByte5_CheckedChanged(object sender, EventArgs e)
+        {
+            if (chkByte5.Checked == true)
+                txtByte5.Enabled = true;
+            else
+            {
+                txtByte5.Clear();
+                txtByte5.Enabled = false;
+            }
+        }
+
+        private void genericTextBoxEventHandler(object sender, EventArgs e)
+        {
+            TextBox currentTextBox = sender as TextBox;
+            short parseResult;
+            if (Int16.TryParse((currentTextBox.Text), out parseResult))
+            {
+                if (parseResult > 255)
+                    parseResult = 255;
+                if (parseResult <= 0)
+                    parseResult = 0;
+                currentTextBox.Text = parseResult.ToString();
+            }
+            else
+                currentTextBox.Text = "";
+        }
+
+        private void btnTransmitToComPort_Click(object sender, EventArgs e)
+        {
+            byte[] TxBytes = new Byte[5];
+
+            try
+            {
+                if (serialPort1.IsOpen)
+                {
+                    if (chkByte1.Checked && (txtByte1.Text != ""))
+                    {
+                        TxBytes[0] = Convert.ToByte(txtByte1.Text);
+                        serialPort1.Write(TxBytes, 0, 1);
+                    }
+                    if (chkByte2.Checked && (txtByte2.Text != ""))
+                    {
+                        TxBytes[1] = Convert.ToByte(txtByte2.Text);
+                        serialPort1.Write(TxBytes, 1, 1);
+                    }
+                    if (chkByte3.Checked && (txtByte3.Text != ""))
+                    {
+                        TxBytes[2] = Convert.ToByte(txtByte3.Text);
+                        serialPort1.Write(TxBytes, 2, 1);
+                    }
+                    if (chkByte4.Checked && (txtByte4.Text != ""))
+                    {
+                        TxBytes[3] = Convert.ToByte(txtByte4.Text);
+                        serialPort1.Write(TxBytes, 3, 1);
+                    }
+                    if (chkByte5.Checked && (txtByte5.Text != ""))
+                    {
+                        TxBytes[4] = Convert.ToByte(txtByte5.Text);
+                        serialPort1.Write(TxBytes, 4, 1);
+                    }
+                }
+            }
+            catch (Exception Ex)
+            {
+                MessageBox.Show(Ex.Message);
             }
         }
     }

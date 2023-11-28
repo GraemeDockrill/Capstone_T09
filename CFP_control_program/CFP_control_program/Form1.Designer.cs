@@ -42,6 +42,17 @@
             this.serialPort1 = new System.IO.Ports.SerialPort(this.components);
             this.lblDataRate = new System.Windows.Forms.Label();
             this.cbAutoReconnect = new System.Windows.Forms.CheckBox();
+            this.txtByte1 = new System.Windows.Forms.TextBox();
+            this.txtByte2 = new System.Windows.Forms.TextBox();
+            this.txtByte3 = new System.Windows.Forms.TextBox();
+            this.txtByte4 = new System.Windows.Forms.TextBox();
+            this.txtByte5 = new System.Windows.Forms.TextBox();
+            this.chkByte1 = new System.Windows.Forms.CheckBox();
+            this.chkByte2 = new System.Windows.Forms.CheckBox();
+            this.chkByte3 = new System.Windows.Forms.CheckBox();
+            this.chkByte4 = new System.Windows.Forms.CheckBox();
+            this.chkByte5 = new System.Windows.Forms.CheckBox();
+            this.btnTransmitToComPort = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // cmbComPorts
@@ -158,11 +169,124 @@
             this.cbAutoReconnect.Text = "Auto Reconnect";
             this.cbAutoReconnect.UseVisualStyleBackColor = true;
             // 
+            // txtByte1
+            // 
+            this.txtByte1.Location = new System.Drawing.Point(12, 109);
+            this.txtByte1.Name = "txtByte1";
+            this.txtByte1.Size = new System.Drawing.Size(100, 26);
+            this.txtByte1.TabIndex = 11;
+            this.txtByte1.TextChanged += new System.EventHandler(this.genericTextBoxEventHandler);
+            // 
+            // txtByte2
+            // 
+            this.txtByte2.Location = new System.Drawing.Point(118, 109);
+            this.txtByte2.Name = "txtByte2";
+            this.txtByte2.Size = new System.Drawing.Size(100, 26);
+            this.txtByte2.TabIndex = 12;
+            // 
+            // txtByte3
+            // 
+            this.txtByte3.Location = new System.Drawing.Point(224, 109);
+            this.txtByte3.Name = "txtByte3";
+            this.txtByte3.Size = new System.Drawing.Size(100, 26);
+            this.txtByte3.TabIndex = 13;
+            // 
+            // txtByte4
+            // 
+            this.txtByte4.Location = new System.Drawing.Point(330, 109);
+            this.txtByte4.Name = "txtByte4";
+            this.txtByte4.Size = new System.Drawing.Size(100, 26);
+            this.txtByte4.TabIndex = 14;
+            // 
+            // txtByte5
+            // 
+            this.txtByte5.Location = new System.Drawing.Point(436, 109);
+            this.txtByte5.Name = "txtByte5";
+            this.txtByte5.Size = new System.Drawing.Size(100, 26);
+            this.txtByte5.TabIndex = 15;
+            // 
+            // chkByte1
+            // 
+            this.chkByte1.AutoSize = true;
+            this.chkByte1.Location = new System.Drawing.Point(13, 79);
+            this.chkByte1.Name = "chkByte1";
+            this.chkByte1.Size = new System.Drawing.Size(89, 24);
+            this.chkByte1.TabIndex = 16;
+            this.chkByte1.Text = "Byte #1";
+            this.chkByte1.UseVisualStyleBackColor = true;
+            this.chkByte1.CheckedChanged += new System.EventHandler(this.chkByte1_CheckedChanged);
+            // 
+            // chkByte2
+            // 
+            this.chkByte2.AutoSize = true;
+            this.chkByte2.Location = new System.Drawing.Point(118, 79);
+            this.chkByte2.Name = "chkByte2";
+            this.chkByte2.Size = new System.Drawing.Size(89, 24);
+            this.chkByte2.TabIndex = 17;
+            this.chkByte2.Text = "Byte #2";
+            this.chkByte2.UseVisualStyleBackColor = true;
+            this.chkByte2.CheckedChanged += new System.EventHandler(this.chkByte2_CheckedChanged);
+            // 
+            // chkByte3
+            // 
+            this.chkByte3.AutoSize = true;
+            this.chkByte3.Location = new System.Drawing.Point(224, 78);
+            this.chkByte3.Name = "chkByte3";
+            this.chkByte3.Size = new System.Drawing.Size(89, 24);
+            this.chkByte3.TabIndex = 18;
+            this.chkByte3.Text = "Byte #3";
+            this.chkByte3.UseVisualStyleBackColor = true;
+            this.chkByte3.CheckedChanged += new System.EventHandler(this.chkByte3_CheckedChanged);
+            // 
+            // chkByte4
+            // 
+            this.chkByte4.AutoSize = true;
+            this.chkByte4.Location = new System.Drawing.Point(330, 78);
+            this.chkByte4.Name = "chkByte4";
+            this.chkByte4.Size = new System.Drawing.Size(89, 24);
+            this.chkByte4.TabIndex = 19;
+            this.chkByte4.Text = "Byte #4";
+            this.chkByte4.UseVisualStyleBackColor = true;
+            this.chkByte4.CheckedChanged += new System.EventHandler(this.chkByte4_CheckedChanged);
+            // 
+            // chkByte5
+            // 
+            this.chkByte5.AutoSize = true;
+            this.chkByte5.Location = new System.Drawing.Point(436, 79);
+            this.chkByte5.Name = "chkByte5";
+            this.chkByte5.Size = new System.Drawing.Size(89, 24);
+            this.chkByte5.TabIndex = 20;
+            this.chkByte5.Text = "Byte #5";
+            this.chkByte5.UseVisualStyleBackColor = true;
+            this.chkByte5.CheckedChanged += new System.EventHandler(this.chkByte5_CheckedChanged);
+            // 
+            // btnTransmitToComPort
+            // 
+            this.btnTransmitToComPort.Font = new System.Drawing.Font("Microsoft Sans Serif", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnTransmitToComPort.Location = new System.Drawing.Point(12, 141);
+            this.btnTransmitToComPort.Name = "btnTransmitToComPort";
+            this.btnTransmitToComPort.Size = new System.Drawing.Size(524, 53);
+            this.btnTransmitToComPort.TabIndex = 21;
+            this.btnTransmitToComPort.Text = "Transmit to COM Port";
+            this.btnTransmitToComPort.UseVisualStyleBackColor = true;
+            this.btnTransmitToComPort.Click += new System.EventHandler(this.btnTransmitToComPort_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(587, 715);
+            this.Controls.Add(this.btnTransmitToComPort);
+            this.Controls.Add(this.chkByte5);
+            this.Controls.Add(this.chkByte4);
+            this.Controls.Add(this.chkByte3);
+            this.Controls.Add(this.chkByte2);
+            this.Controls.Add(this.chkByte1);
+            this.Controls.Add(this.txtByte5);
+            this.Controls.Add(this.txtByte4);
+            this.Controls.Add(this.txtByte3);
+            this.Controls.Add(this.txtByte2);
+            this.Controls.Add(this.txtByte1);
             this.Controls.Add(this.cbAutoReconnect);
             this.Controls.Add(this.lblDataRate);
             this.Controls.Add(this.txtComOutput);
@@ -196,6 +320,17 @@
         private System.IO.Ports.SerialPort serialPort1;
         private System.Windows.Forms.Label lblDataRate;
         private System.Windows.Forms.CheckBox cbAutoReconnect;
+        private System.Windows.Forms.TextBox txtByte1;
+        private System.Windows.Forms.TextBox txtByte2;
+        private System.Windows.Forms.TextBox txtByte3;
+        private System.Windows.Forms.TextBox txtByte4;
+        private System.Windows.Forms.TextBox txtByte5;
+        private System.Windows.Forms.CheckBox chkByte1;
+        private System.Windows.Forms.CheckBox chkByte2;
+        private System.Windows.Forms.CheckBox chkByte3;
+        private System.Windows.Forms.CheckBox chkByte4;
+        private System.Windows.Forms.CheckBox chkByte5;
+        private System.Windows.Forms.Button btnTransmitToComPort;
     }
 }
 
