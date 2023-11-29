@@ -53,6 +53,7 @@
             this.chkByte4 = new System.Windows.Forms.CheckBox();
             this.chkByte5 = new System.Windows.Forms.CheckBox();
             this.btnTransmitToComPort = new System.Windows.Forms.Button();
+            this.btnZeroPosition = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // cmbComPorts
@@ -94,7 +95,7 @@
             // 
             // txtKeyboardInput
             // 
-            this.txtKeyboardInput.Location = new System.Drawing.Point(12, 266);
+            this.txtKeyboardInput.Location = new System.Drawing.Point(12, 523);
             this.txtKeyboardInput.Multiline = true;
             this.txtKeyboardInput.Name = "txtKeyboardInput";
             this.txtKeyboardInput.Size = new System.Drawing.Size(563, 80);
@@ -105,7 +106,7 @@
             // 
             this.lblKeyboardInput.AutoSize = true;
             this.lblKeyboardInput.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblKeyboardInput.Location = new System.Drawing.Point(12, 234);
+            this.lblKeyboardInput.Location = new System.Drawing.Point(12, 491);
             this.lblKeyboardInput.Name = "lblKeyboardInput";
             this.lblKeyboardInput.Size = new System.Drawing.Size(196, 29);
             this.lblKeyboardInput.TabIndex = 5;
@@ -115,7 +116,7 @@
             // 
             this.cbComResponse.AutoSize = true;
             this.cbComResponse.Font = new System.Drawing.Font("Microsoft Sans Serif", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.cbComResponse.Location = new System.Drawing.Point(12, 352);
+            this.cbComResponse.Location = new System.Drawing.Point(12, 609);
             this.cbComResponse.Name = "cbComResponse";
             this.cbComResponse.Size = new System.Drawing.Size(289, 30);
             this.cbComResponse.TabIndex = 6;
@@ -126,7 +127,7 @@
             // 
             this.cbAlphNumOutput.AutoSize = true;
             this.cbAlphNumOutput.Font = new System.Drawing.Font("Microsoft Sans Serif", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.cbAlphNumOutput.Location = new System.Drawing.Point(307, 352);
+            this.cbAlphNumOutput.Location = new System.Drawing.Point(307, 609);
             this.cbAlphNumOutput.Name = "cbAlphNumOutput";
             this.cbAlphNumOutput.Size = new System.Drawing.Size(243, 30);
             this.cbAlphNumOutput.TabIndex = 7;
@@ -135,7 +136,7 @@
             // 
             // txtComOutput
             // 
-            this.txtComOutput.Location = new System.Drawing.Point(12, 388);
+            this.txtComOutput.Location = new System.Drawing.Point(12, 645);
             this.txtComOutput.Multiline = true;
             this.txtComOutput.Name = "txtComOutput";
             this.txtComOutput.Size = new System.Drawing.Size(563, 269);
@@ -153,7 +154,7 @@
             // 
             this.lblDataRate.AutoSize = true;
             this.lblDataRate.Font = new System.Drawing.Font("Microsoft Sans Serif", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblDataRate.Location = new System.Drawing.Point(12, 660);
+            this.lblDataRate.Location = new System.Drawing.Point(12, 917);
             this.lblDataRate.Name = "lblDataRate";
             this.lblDataRate.Size = new System.Drawing.Size(413, 26);
             this.lblDataRate.TabIndex = 9;
@@ -271,11 +272,22 @@
             this.btnTransmitToComPort.UseVisualStyleBackColor = true;
             this.btnTransmitToComPort.Click += new System.EventHandler(this.btnTransmitToComPort_Click);
             // 
+            // btnZeroPosition
+            // 
+            this.btnZeroPosition.Location = new System.Drawing.Point(12, 201);
+            this.btnZeroPosition.Name = "btnZeroPosition";
+            this.btnZeroPosition.Size = new System.Drawing.Size(195, 97);
+            this.btnZeroPosition.TabIndex = 22;
+            this.btnZeroPosition.Text = "Zero Position";
+            this.btnZeroPosition.UseVisualStyleBackColor = true;
+            this.btnZeroPosition.Click += new System.EventHandler(this.btnZeroPosition_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(587, 715);
+            this.ClientSize = new System.Drawing.Size(587, 951);
+            this.Controls.Add(this.btnZeroPosition);
             this.Controls.Add(this.btnTransmitToComPort);
             this.Controls.Add(this.chkByte5);
             this.Controls.Add(this.chkByte4);
@@ -331,6 +343,7 @@
         private System.Windows.Forms.CheckBox chkByte4;
         private System.Windows.Forms.CheckBox chkByte5;
         private System.Windows.Forms.Button btnTransmitToComPort;
+        private System.Windows.Forms.Button btnZeroPosition;
     }
 }
 

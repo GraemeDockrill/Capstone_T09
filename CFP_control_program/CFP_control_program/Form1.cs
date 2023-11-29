@@ -16,16 +16,13 @@ namespace CFP_control_program
 
         public int numberOfDataPoints = 0;
         public bool sendData = false;
+        public int startByte = 255;
         public int cmdByte0 = 0;                    // 0 = WS CW, 1 = WS CCW, 2 = HS CW, 3 = HS CCW, 4 = WS CW Cont., 5 = WS CCW Cont., 6 = HS CW Cont., 7 = HW CCW Cont. for STEPPER MOTOR
-        public int cmdByte1 = 1;                    // 0 = CW, 1 = CCW for DC MOTOR
-        public int stepByte0 = 0;
-        public int stepByte1 = 0;
-        public int DCByte0 = 0;
-        public int DCByte1 = 0;
+        public int dataByte0 = 0;
+        public int dataByte1 = 0;
         public int ESCByte = 0;
 
-        public int stepSpeed = 0;                   // stepping speed for STEPPER MOTOR
-        public int dutyCycle = 0;                   // duty cycle for the DC MOTOR
+        public int dataInt = 0;
 
         // define bit constants
         public int BIT0 = 0x0001;
@@ -135,58 +132,36 @@ namespace CFP_control_program
                 {
                     if (serialPort1.IsOpen)
                     {
-                        // split the step speed into 2 bytes
-                        stepByte0 = stepSpeed >> 8;
-                        stepByte0 &= 255;
-                        stepByte1 = stepSpeed;
-                        stepByte1 &= 255;
-
                         // split the duty cycle into 2 bytes
-                        DCByte0 = dutyCycle >> 8;
-                        DCByte0 &= 255;
-                        DCByte1 = dutyCycle;
-                        DCByte1 &= 255;
+                        dataByte0 = dataInt >> 8;
+                        dataByte0 &= 255;
+                        dataByte1 = dataInt;
+                        dataByte1 &= 255;
 
-                        // check if data bytes are greater or equal to 255
-                        if (stepByte0 >= 255)
+                        // check if data bytes are greater or equal to 255, then set escape byte
+                        if (dataByte0 >= 255)
                         {
-                            stepByte0 = 0;
-                            ESCByte |= BIT3;
-                        }
-                        if (stepByte1 >= 255)
-                        {
-                            stepByte1 = 0;
-                            ESCByte |= BIT2;
-                        }
-                        if (DCByte0 >= 255)
-                        {
-                            DCByte0 = 0;
+                            dataByte0 = 0;
                             ESCByte |= BIT1;
                         }
-                        if (DCByte1 >= 255)
+                        if (dataByte1 >= 255)
                         {
-                            DCByte1 = 0;
+                            dataByte1 = 0;
                             ESCByte |= BIT0;
                         }
 
                         // sending data packet over UART
-                        byte[] TxBytes = new Byte[8];
-                        TxBytes[0] = Convert.ToByte(255);                   // start byte
+                        byte[] TxBytes = new Byte[5];
+                        TxBytes[0] = Convert.ToByte(startByte);             // start byte
                         serialPort1.Write(TxBytes, 0, 1);
-                        TxBytes[1] = Convert.ToByte(cmdByte0);              // command byte for stepper control
+                        TxBytes[1] = Convert.ToByte(cmdByte0);              // command byte
                         serialPort1.Write(TxBytes, 1, 1);
-                        TxBytes[2] = Convert.ToByte(cmdByte1);              // command byte for DC motor control
+                        TxBytes[2] = Convert.ToByte(dataByte0);             // data byte 0
                         serialPort1.Write(TxBytes, 2, 1);
-                        TxBytes[3] = Convert.ToByte(stepByte0);             // stepper speed byte0
+                        TxBytes[3] = Convert.ToByte(dataByte1);             // data byte 1
                         serialPort1.Write(TxBytes, 3, 1);
-                        TxBytes[4] = Convert.ToByte(stepByte1);             // stepper speed byte1
+                        TxBytes[4] = Convert.ToByte(ESCByte);               // escape byte
                         serialPort1.Write(TxBytes, 4, 1);
-                        TxBytes[5] = Convert.ToByte(DCByte0);               // DC motor duty byte0
-                        serialPort1.Write(TxBytes, 5, 1);
-                        TxBytes[6] = Convert.ToByte(DCByte1);               // DC motor duty byte1
-                        serialPort1.Write(TxBytes, 6, 1);
-                        TxBytes[7] = Convert.ToByte(ESCByte);               // Escape byte
-                        serialPort1.Write(TxBytes, 7, 1);
 
                         ESCByte = 0;                                        // reset escape byte
                     }
@@ -340,6 +315,12 @@ namespace CFP_control_program
             {
                 MessageBox.Show(Ex.Message);
             }
+        }
+
+        private void btnZeroPosition_Click(object sender, EventArgs e)
+        {
+            cmdByte0 = 0;
+            sendData = true;
         }
     }
 }
