@@ -13,6 +13,10 @@ namespace CFP_control_program
 {
     public partial class Form1 : Form
     {
+        // constants
+        public int pulsePerRev = 400;
+        public int leadPerRev = 2;
+
         // communication bytes
         public int numberOfDataPoints = 0;
         public bool sendData = false;
@@ -32,11 +36,10 @@ namespace CFP_control_program
         public int strainTarget_percent;
         public int strainTarget_steps;
         public int strainRate_percentPerSec;
-        public int strainRate_steps;
+        public int strainRate_stepsPerSec;
         public int strainIncrement_percent;
         public int strainIncrement_steps;
-        public int strainCycles_percent;
-        public int strainCycle_steps;
+        public int strainCycles;
 
         // define bit constants
         public int BIT0 = 0x0001;
@@ -177,6 +180,7 @@ namespace CFP_control_program
                         TxBytes[4] = Convert.ToByte(ESCByte);               // escape byte
                         serialPort1.Write(TxBytes, 4, 1);
 
+                        dataInt = 0;                                        // reset dataInt
                         ESCByte = 0;                                        // reset escape byte
                     }
                 }
@@ -337,33 +341,100 @@ namespace CFP_control_program
             sendData = true;
         }
 
-        private void btnSTOP_Click(object sender, EventArgs e)
+        private void tbManualMove_ValueChanged(object sender, EventArgs e)
         {
-            cmdByte0 = 11;
-            sendData = true;
+            // positive direction
+            if(tbManualMove.Value > tbManualMove.Maximum / 2)
+            {
+                cmdByte0 = 1;
+                dataInt = tbManualMove.Value;
+            }
+
+            // negative direction
+            if(tbManualMove.Value < tbManualMove.Minimum / 2)
+            {
+                cmdByte0 = 2;
+            }
         }
 
         private void btnSetMembraneSize_Click(object sender, EventArgs e)
         {
-            cmdByte0 = 3;
-            sendData = true;
+            if(txtMembraneSize.Text != "")
+            {
+                cmdByte0 = 3;
+                membraneSize_mm = Int16.Parse(txtMembraneSize.Text);
+                membraneSize_steps = membraneSize_mm * pulsePerRev / leadPerRev;
+                dataInt = membraneSize_steps;
+                sendData = true;
+            }
         }
 
         private void btnSetStrainTarget_Click(object sender, EventArgs e)
         {
-            cmdByte0 = 4;
-            sendData = true;
+            if(txtStrainTarget.Text != "")
+            {
+                cmdByte0 = 4;
+                strainTarget_percent = Int16.Parse(txtStrainTarget.Text);
+                strainTarget_steps = membraneSize_steps * strainTarget_percent / 100;
+                dataInt = strainTarget_steps;
+                sendData = true;
+            }
         }
 
         private void btnSetStrainRate_Click(object sender, EventArgs e)
         {
-            cmdByte0 = 5;
-            sendData = true;
+            if(txtStrainRate.Text != "")
+            {
+                cmdByte0 = 5;
+                strainRate_percentPerSec = Int16.Parse(txtStrainRate.Text);
+                strainRate_stepsPerSec = membraneSize_steps * strainRate_percentPerSec / 100;
+                sendData = true;
+            }
+        }
+
+        private void btnSetStrainCycles_Click(object sender, EventArgs e)
+        {
+            if(txtStrainCycles.Text != "")
+            {
+                cmdByte0 = 6;
+                strainCycles = Int16.Parse(txtStrainCycles.Text);
+                dataInt = strainCycles;
+                sendData = true;
+            }
         }
 
         private void btnSetStrainIncrement_Click(object sender, EventArgs e)
         {
-            cmdByte0 = 7;
+            if(txtStrainIncrement.Text != "")
+            {
+                cmdByte0 = 7;
+                strainIncrement_percent = Int16.Parse(txtStrainIncrement.Text);
+                sendData = true;
+            }
+        }
+
+        private void btnStretchtoMaxStrain_Click(object sender, EventArgs e)
+        {
+            cmdByte0 = 8;
+            sendData = true;
+        }
+
+        private void btnReturntoZero_Click(object sender, EventArgs e)
+        {
+            cmdByte0 = 9;
+            sendData = true;
+        }
+
+        private void btnCyclicStretching_Click(object sender, EventArgs e)
+        {
+            cmdByte0 = 10;
+            sendData = true;
+        }
+
+        private void btnSTOP_Click(object sender, EventArgs e)
+        {
+            cmdByte0 = 11;
+            tbManualMove.Value = tbManualMove.Maximum / 2;
             sendData = true;
         }
 
@@ -397,28 +468,19 @@ namespace CFP_control_program
             }
         }
 
-        private void btnReturntoZero_Click(object sender, EventArgs e)
+        private void txtStrainCycles_TextChanged(object sender, EventArgs e)
         {
-            cmdByte0 = 9;
-            sendData = true;
+            TextBox currentTextBox = sender as TextBox;
+            short parseResult;
+            if (Int16.TryParse((currentTextBox.Text), out parseResult))
+            {
+                if (parseResult <= 0)
+                    parseResult = 0;
+                currentTextBox.Text = parseResult.ToString();
+            }
+            else
+                currentTextBox.Text = "";
         }
 
-        private void btnStretchtoMaxStrain_Click(object sender, EventArgs e)
-        {
-            cmdByte0 = 8;
-            sendData = true;
-        }
-
-        private void btnSetStrainCycles_Click(object sender, EventArgs e)
-        {
-            cmdByte0 = 6;
-            sendData = true;
-        }
-
-        private void btnCyclicStretching_Click(object sender, EventArgs e)
-        {
-            cmdByte0 = 10;
-            sendData = true;
-        }
     }
 }

@@ -297,7 +297,7 @@
             this.btnZeroPosition.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnZeroPosition.Location = new System.Drawing.Point(12, 201);
             this.btnZeroPosition.Name = "btnZeroPosition";
-            this.btnZeroPosition.Size = new System.Drawing.Size(126, 50);
+            this.btnZeroPosition.Size = new System.Drawing.Size(149, 50);
             this.btnZeroPosition.TabIndex = 22;
             this.btnZeroPosition.Text = "Zero Position";
             this.btnZeroPosition.UseVisualStyleBackColor = true;
@@ -310,7 +310,7 @@
             this.btnSTOP.ForeColor = System.Drawing.SystemColors.Control;
             this.btnSTOP.Location = new System.Drawing.Point(12, 257);
             this.btnSTOP.Name = "btnSTOP";
-            this.btnSTOP.Size = new System.Drawing.Size(126, 50);
+            this.btnSTOP.Size = new System.Drawing.Size(149, 50);
             this.btnSTOP.TabIndex = 23;
             this.btnSTOP.Text = "STOP";
             this.btnSTOP.UseVisualStyleBackColor = false;
@@ -318,17 +318,18 @@
             // 
             // tbManualMove
             // 
-            this.tbManualMove.Location = new System.Drawing.Point(144, 238);
+            this.tbManualMove.Location = new System.Drawing.Point(167, 238);
             this.tbManualMove.Name = "tbManualMove";
-            this.tbManualMove.Size = new System.Drawing.Size(431, 69);
+            this.tbManualMove.Size = new System.Drawing.Size(408, 69);
             this.tbManualMove.TabIndex = 24;
             this.tbManualMove.Value = 5;
+            this.tbManualMove.ValueChanged += new System.EventHandler(this.tbManualMove_ValueChanged);
             // 
             // lblManualMovement
             // 
             this.lblManualMovement.AutoSize = true;
             this.lblManualMovement.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblManualMovement.Location = new System.Drawing.Point(144, 201);
+            this.lblManualMovement.Location = new System.Drawing.Point(162, 201);
             this.lblManualMovement.Name = "lblManualMovement";
             this.lblManualMovement.Size = new System.Drawing.Size(233, 25);
             this.lblManualMovement.TabIndex = 25;
@@ -352,6 +353,7 @@
             this.txtMembraneSize.Name = "txtMembraneSize";
             this.txtMembraneSize.Size = new System.Drawing.Size(190, 39);
             this.txtMembraneSize.TabIndex = 27;
+            this.txtMembraneSize.TextChanged += new System.EventHandler(this.genericTextBoxEventHandler);
             // 
             // btnSetMembraneSize
             // 
@@ -371,6 +373,7 @@
             this.txtStrainTarget.Name = "txtStrainTarget";
             this.txtStrainTarget.Size = new System.Drawing.Size(190, 39);
             this.txtStrainTarget.TabIndex = 29;
+            this.txtStrainTarget.TextChanged += new System.EventHandler(this.genericTextBoxEventHandler);
             // 
             // btnSetStrainTarget
             // 
@@ -390,6 +393,7 @@
             this.txtStrainRate.Name = "txtStrainRate";
             this.txtStrainRate.Size = new System.Drawing.Size(189, 39);
             this.txtStrainRate.TabIndex = 31;
+            this.txtStrainRate.TextChanged += new System.EventHandler(this.genericTextBoxEventHandler);
             // 
             // btnSetStrainRate
             // 
@@ -409,6 +413,7 @@
             this.txtStrainIncrement.Name = "txtStrainIncrement";
             this.txtStrainIncrement.Size = new System.Drawing.Size(190, 39);
             this.txtStrainIncrement.TabIndex = 33;
+            this.txtStrainIncrement.TextChanged += new System.EventHandler(this.genericTextBoxEventHandler);
             // 
             // btnSetStrainIncrement
             // 
@@ -461,6 +466,7 @@
             this.txtStrainCycles.Name = "txtStrainCycles";
             this.txtStrainCycles.Size = new System.Drawing.Size(281, 37);
             this.txtStrainCycles.TabIndex = 38;
+            this.txtStrainCycles.TextChanged += new System.EventHandler(this.txtStrainCycles_TextChanged);
             // 
             // btnSetStrainCycles
             // 
