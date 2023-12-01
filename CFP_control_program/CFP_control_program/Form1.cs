@@ -13,16 +13,30 @@ namespace CFP_control_program
 {
     public partial class Form1 : Form
     {
-
+        // communication bytes
         public int numberOfDataPoints = 0;
         public bool sendData = false;
         public int startByte = 255;
-        public int cmdByte0 = 0;                    // 0 = WS CW, 1 = WS CCW, 2 = HS CW, 3 = HS CCW, 4 = WS CW Cont., 5 = WS CCW Cont., 6 = HS CW Cont., 7 = HW CCW Cont. for STEPPER MOTOR
+        public int cmdByte0 = 0;                    // 0 = zero pos, 1 = move +ve dir, 2 = movoe -ve dir, 3 = set membrane size, 4 = set strain target, 5 = set strain rate, 6 = set number of strain cycles, 7 = set strain increment, 8 = stretch to max strain, 9 = return to zero position, 10 = cyclic stretching protocol, 11 = STOP STEPPER
         public int dataByte0 = 0;
         public int dataByte1 = 0;
         public int ESCByte = 0;
 
+        // enabling/disabling parameter editing
+        public bool parameterStatus = true;
+
+        // data variables
         public int dataInt = 0;
+        public int membraneSize_mm;
+        public int membraneSize_steps;
+        public int strainTarget_percent;
+        public int strainTarget_steps;
+        public int strainRate_percentPerSec;
+        public int strainRate_steps;
+        public int strainIncrement_percent;
+        public int strainIncrement_steps;
+        public int strainCycles_percent;
+        public int strainCycle_steps;
 
         // define bit constants
         public int BIT0 = 0x0001;
@@ -320,6 +334,90 @@ namespace CFP_control_program
         private void btnZeroPosition_Click(object sender, EventArgs e)
         {
             cmdByte0 = 0;
+            sendData = true;
+        }
+
+        private void btnSTOP_Click(object sender, EventArgs e)
+        {
+            cmdByte0 = 11;
+            sendData = true;
+        }
+
+        private void btnSetMembraneSize_Click(object sender, EventArgs e)
+        {
+            cmdByte0 = 3;
+            sendData = true;
+        }
+
+        private void btnSetStrainTarget_Click(object sender, EventArgs e)
+        {
+            cmdByte0 = 4;
+            sendData = true;
+        }
+
+        private void btnSetStrainRate_Click(object sender, EventArgs e)
+        {
+            cmdByte0 = 5;
+            sendData = true;
+        }
+
+        private void btnSetStrainIncrement_Click(object sender, EventArgs e)
+        {
+            cmdByte0 = 7;
+            sendData = true;
+        }
+
+        private void btnLockParams_Click(object sender, EventArgs e)
+        {
+            if (parameterStatus)
+            {
+                parameterStatus = false;
+                btnLockParams.Text = "Unlock Params";
+                txtMembraneSize.Enabled = false;
+                btnSetMembraneSize.Enabled = false;
+                txtStrainTarget.Enabled = false;
+                btnSetStrainTarget.Enabled = false;
+                txtStrainRate.Enabled = false;
+                btnSetStrainRate.Enabled = false;
+                txtStrainIncrement.Enabled = false;
+                btnSetStrainIncrement.Enabled = false;
+            }
+            else
+            {
+                parameterStatus = true;
+                btnLockParams.Text = "Lock Params";
+                txtMembraneSize.Enabled = true;
+                btnSetMembraneSize.Enabled = true;
+                txtStrainTarget.Enabled = true;
+                btnSetStrainTarget.Enabled = true;
+                txtStrainRate.Enabled = true;
+                btnSetStrainRate.Enabled = true;
+                txtStrainIncrement.Enabled = true;
+                btnSetStrainIncrement.Enabled = true;
+            }
+        }
+
+        private void btnReturntoZero_Click(object sender, EventArgs e)
+        {
+            cmdByte0 = 9;
+            sendData = true;
+        }
+
+        private void btnStretchtoMaxStrain_Click(object sender, EventArgs e)
+        {
+            cmdByte0 = 8;
+            sendData = true;
+        }
+
+        private void btnSetStrainCycles_Click(object sender, EventArgs e)
+        {
+            cmdByte0 = 6;
+            sendData = true;
+        }
+
+        private void btnCyclicStretching_Click(object sender, EventArgs e)
+        {
+            cmdByte0 = 10;
             sendData = true;
         }
     }

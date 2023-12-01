@@ -54,6 +54,26 @@
             this.chkByte5 = new System.Windows.Forms.CheckBox();
             this.btnTransmitToComPort = new System.Windows.Forms.Button();
             this.btnZeroPosition = new System.Windows.Forms.Button();
+            this.btnSTOP = new System.Windows.Forms.Button();
+            this.tbManualMove = new System.Windows.Forms.TrackBar();
+            this.lblManualMovement = new System.Windows.Forms.Label();
+            this.lblSetParameters = new System.Windows.Forms.Label();
+            this.txtMembraneSize = new System.Windows.Forms.TextBox();
+            this.btnSetMembraneSize = new System.Windows.Forms.Button();
+            this.txtStrainTarget = new System.Windows.Forms.TextBox();
+            this.btnSetStrainTarget = new System.Windows.Forms.Button();
+            this.txtStrainRate = new System.Windows.Forms.TextBox();
+            this.btnSetStrainRate = new System.Windows.Forms.Button();
+            this.txtStrainIncrement = new System.Windows.Forms.TextBox();
+            this.btnSetStrainIncrement = new System.Windows.Forms.Button();
+            this.btnLockParams = new System.Windows.Forms.Button();
+            this.btnReturntoZero = new System.Windows.Forms.Button();
+            this.btnStretchtoMaxStrain = new System.Windows.Forms.Button();
+            this.txtStrainCycles = new System.Windows.Forms.TextBox();
+            this.btnSetStrainCycles = new System.Windows.Forms.Button();
+            this.lblCyclicStretching = new System.Windows.Forms.Label();
+            this.btnCyclicStretching = new System.Windows.Forms.Button();
+            ((System.ComponentModel.ISupportInitialize)(this.tbManualMove)).BeginInit();
             this.SuspendLayout();
             // 
             // cmbComPorts
@@ -95,7 +115,7 @@
             // 
             // txtKeyboardInput
             // 
-            this.txtKeyboardInput.Location = new System.Drawing.Point(12, 523);
+            this.txtKeyboardInput.Location = new System.Drawing.Point(10, 738);
             this.txtKeyboardInput.Multiline = true;
             this.txtKeyboardInput.Name = "txtKeyboardInput";
             this.txtKeyboardInput.Size = new System.Drawing.Size(563, 80);
@@ -106,7 +126,7 @@
             // 
             this.lblKeyboardInput.AutoSize = true;
             this.lblKeyboardInput.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblKeyboardInput.Location = new System.Drawing.Point(12, 491);
+            this.lblKeyboardInput.Location = new System.Drawing.Point(10, 706);
             this.lblKeyboardInput.Name = "lblKeyboardInput";
             this.lblKeyboardInput.Size = new System.Drawing.Size(196, 29);
             this.lblKeyboardInput.TabIndex = 5;
@@ -116,7 +136,7 @@
             // 
             this.cbComResponse.AutoSize = true;
             this.cbComResponse.Font = new System.Drawing.Font("Microsoft Sans Serif", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.cbComResponse.Location = new System.Drawing.Point(12, 609);
+            this.cbComResponse.Location = new System.Drawing.Point(10, 824);
             this.cbComResponse.Name = "cbComResponse";
             this.cbComResponse.Size = new System.Drawing.Size(289, 30);
             this.cbComResponse.TabIndex = 6;
@@ -127,7 +147,7 @@
             // 
             this.cbAlphNumOutput.AutoSize = true;
             this.cbAlphNumOutput.Font = new System.Drawing.Font("Microsoft Sans Serif", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.cbAlphNumOutput.Location = new System.Drawing.Point(307, 609);
+            this.cbAlphNumOutput.Location = new System.Drawing.Point(305, 824);
             this.cbAlphNumOutput.Name = "cbAlphNumOutput";
             this.cbAlphNumOutput.Size = new System.Drawing.Size(243, 30);
             this.cbAlphNumOutput.TabIndex = 7;
@@ -136,10 +156,10 @@
             // 
             // txtComOutput
             // 
-            this.txtComOutput.Location = new System.Drawing.Point(12, 645);
+            this.txtComOutput.Location = new System.Drawing.Point(12, 860);
             this.txtComOutput.Multiline = true;
             this.txtComOutput.Name = "txtComOutput";
-            this.txtComOutput.Size = new System.Drawing.Size(563, 269);
+            this.txtComOutput.Size = new System.Drawing.Size(563, 164);
             this.txtComOutput.TabIndex = 8;
             // 
             // timer1
@@ -154,7 +174,7 @@
             // 
             this.lblDataRate.AutoSize = true;
             this.lblDataRate.Font = new System.Drawing.Font("Microsoft Sans Serif", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblDataRate.Location = new System.Drawing.Point(12, 917);
+            this.lblDataRate.Location = new System.Drawing.Point(12, 1027);
             this.lblDataRate.Name = "lblDataRate";
             this.lblDataRate.Size = new System.Drawing.Size(413, 26);
             this.lblDataRate.TabIndex = 9;
@@ -266,7 +286,7 @@
             this.btnTransmitToComPort.Font = new System.Drawing.Font("Microsoft Sans Serif", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnTransmitToComPort.Location = new System.Drawing.Point(12, 141);
             this.btnTransmitToComPort.Name = "btnTransmitToComPort";
-            this.btnTransmitToComPort.Size = new System.Drawing.Size(524, 53);
+            this.btnTransmitToComPort.Size = new System.Drawing.Size(563, 53);
             this.btnTransmitToComPort.TabIndex = 21;
             this.btnTransmitToComPort.Text = "Transmit to COM Port";
             this.btnTransmitToComPort.UseVisualStyleBackColor = true;
@@ -274,19 +294,230 @@
             // 
             // btnZeroPosition
             // 
+            this.btnZeroPosition.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnZeroPosition.Location = new System.Drawing.Point(12, 201);
             this.btnZeroPosition.Name = "btnZeroPosition";
-            this.btnZeroPosition.Size = new System.Drawing.Size(195, 97);
+            this.btnZeroPosition.Size = new System.Drawing.Size(126, 50);
             this.btnZeroPosition.TabIndex = 22;
             this.btnZeroPosition.Text = "Zero Position";
             this.btnZeroPosition.UseVisualStyleBackColor = true;
             this.btnZeroPosition.Click += new System.EventHandler(this.btnZeroPosition_Click);
             // 
+            // btnSTOP
+            // 
+            this.btnSTOP.BackColor = System.Drawing.Color.Firebrick;
+            this.btnSTOP.Font = new System.Drawing.Font("Microsoft Sans Serif", 11F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnSTOP.ForeColor = System.Drawing.SystemColors.Control;
+            this.btnSTOP.Location = new System.Drawing.Point(12, 257);
+            this.btnSTOP.Name = "btnSTOP";
+            this.btnSTOP.Size = new System.Drawing.Size(126, 50);
+            this.btnSTOP.TabIndex = 23;
+            this.btnSTOP.Text = "STOP";
+            this.btnSTOP.UseVisualStyleBackColor = false;
+            this.btnSTOP.Click += new System.EventHandler(this.btnSTOP_Click);
+            // 
+            // tbManualMove
+            // 
+            this.tbManualMove.Location = new System.Drawing.Point(144, 238);
+            this.tbManualMove.Name = "tbManualMove";
+            this.tbManualMove.Size = new System.Drawing.Size(431, 69);
+            this.tbManualMove.TabIndex = 24;
+            this.tbManualMove.Value = 5;
+            // 
+            // lblManualMovement
+            // 
+            this.lblManualMovement.AutoSize = true;
+            this.lblManualMovement.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblManualMovement.Location = new System.Drawing.Point(144, 201);
+            this.lblManualMovement.Name = "lblManualMovement";
+            this.lblManualMovement.Size = new System.Drawing.Size(233, 25);
+            this.lblManualMovement.TabIndex = 25;
+            this.lblManualMovement.Text = "MANUAL MOVEMENT";
+            this.lblManualMovement.TextAlign = System.Drawing.ContentAlignment.TopCenter;
+            // 
+            // lblSetParameters
+            // 
+            this.lblSetParameters.AutoSize = true;
+            this.lblSetParameters.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblSetParameters.Location = new System.Drawing.Point(12, 310);
+            this.lblSetParameters.Name = "lblSetParameters";
+            this.lblSetParameters.Size = new System.Drawing.Size(208, 25);
+            this.lblSetParameters.TabIndex = 26;
+            this.lblSetParameters.Text = "SET PARAMETERS";
+            // 
+            // txtMembraneSize
+            // 
+            this.txtMembraneSize.Location = new System.Drawing.Point(12, 338);
+            this.txtMembraneSize.Multiline = true;
+            this.txtMembraneSize.Name = "txtMembraneSize";
+            this.txtMembraneSize.Size = new System.Drawing.Size(190, 39);
+            this.txtMembraneSize.TabIndex = 27;
+            // 
+            // btnSetMembraneSize
+            // 
+            this.btnSetMembraneSize.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnSetMembraneSize.Location = new System.Drawing.Point(207, 338);
+            this.btnSetMembraneSize.Name = "btnSetMembraneSize";
+            this.btnSetMembraneSize.Size = new System.Drawing.Size(238, 39);
+            this.btnSetMembraneSize.TabIndex = 28;
+            this.btnSetMembraneSize.Text = "Set Membrane Size [mm]";
+            this.btnSetMembraneSize.UseVisualStyleBackColor = true;
+            this.btnSetMembraneSize.Click += new System.EventHandler(this.btnSetMembraneSize_Click);
+            // 
+            // txtStrainTarget
+            // 
+            this.txtStrainTarget.Location = new System.Drawing.Point(12, 383);
+            this.txtStrainTarget.Multiline = true;
+            this.txtStrainTarget.Name = "txtStrainTarget";
+            this.txtStrainTarget.Size = new System.Drawing.Size(190, 39);
+            this.txtStrainTarget.TabIndex = 29;
+            // 
+            // btnSetStrainTarget
+            // 
+            this.btnSetStrainTarget.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnSetStrainTarget.Location = new System.Drawing.Point(206, 383);
+            this.btnSetStrainTarget.Name = "btnSetStrainTarget";
+            this.btnSetStrainTarget.Size = new System.Drawing.Size(238, 39);
+            this.btnSetStrainTarget.TabIndex = 30;
+            this.btnSetStrainTarget.Text = "Set Strain Target [%]";
+            this.btnSetStrainTarget.UseVisualStyleBackColor = true;
+            this.btnSetStrainTarget.Click += new System.EventHandler(this.btnSetStrainTarget_Click);
+            // 
+            // txtStrainRate
+            // 
+            this.txtStrainRate.Location = new System.Drawing.Point(12, 428);
+            this.txtStrainRate.Multiline = true;
+            this.txtStrainRate.Name = "txtStrainRate";
+            this.txtStrainRate.Size = new System.Drawing.Size(189, 39);
+            this.txtStrainRate.TabIndex = 31;
+            // 
+            // btnSetStrainRate
+            // 
+            this.btnSetStrainRate.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnSetStrainRate.Location = new System.Drawing.Point(207, 428);
+            this.btnSetStrainRate.Name = "btnSetStrainRate";
+            this.btnSetStrainRate.Size = new System.Drawing.Size(238, 39);
+            this.btnSetStrainRate.TabIndex = 32;
+            this.btnSetStrainRate.Text = "Set Strain Rate [%/s]";
+            this.btnSetStrainRate.UseVisualStyleBackColor = true;
+            this.btnSetStrainRate.Click += new System.EventHandler(this.btnSetStrainRate_Click);
+            // 
+            // txtStrainIncrement
+            // 
+            this.txtStrainIncrement.Location = new System.Drawing.Point(11, 473);
+            this.txtStrainIncrement.Multiline = true;
+            this.txtStrainIncrement.Name = "txtStrainIncrement";
+            this.txtStrainIncrement.Size = new System.Drawing.Size(190, 39);
+            this.txtStrainIncrement.TabIndex = 33;
+            // 
+            // btnSetStrainIncrement
+            // 
+            this.btnSetStrainIncrement.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnSetStrainIncrement.Location = new System.Drawing.Point(206, 473);
+            this.btnSetStrainIncrement.Name = "btnSetStrainIncrement";
+            this.btnSetStrainIncrement.Size = new System.Drawing.Size(238, 39);
+            this.btnSetStrainIncrement.TabIndex = 34;
+            this.btnSetStrainIncrement.Text = "Set Strain Increment [%]";
+            this.btnSetStrainIncrement.UseVisualStyleBackColor = true;
+            this.btnSetStrainIncrement.Click += new System.EventHandler(this.btnSetStrainIncrement_Click);
+            // 
+            // btnLockParams
+            // 
+            this.btnLockParams.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnLockParams.Location = new System.Drawing.Point(450, 338);
+            this.btnLockParams.Name = "btnLockParams";
+            this.btnLockParams.Size = new System.Drawing.Size(123, 174);
+            this.btnLockParams.TabIndex = 35;
+            this.btnLockParams.Text = "Lock Params";
+            this.btnLockParams.UseVisualStyleBackColor = true;
+            this.btnLockParams.Click += new System.EventHandler(this.btnLockParams_Click);
+            // 
+            // btnReturntoZero
+            // 
+            this.btnReturntoZero.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnReturntoZero.Location = new System.Drawing.Point(11, 518);
+            this.btnReturntoZero.Name = "btnReturntoZero";
+            this.btnReturntoZero.Size = new System.Drawing.Size(282, 47);
+            this.btnReturntoZero.TabIndex = 36;
+            this.btnReturntoZero.Text = "RETURN TO 0";
+            this.btnReturntoZero.UseVisualStyleBackColor = true;
+            this.btnReturntoZero.Click += new System.EventHandler(this.btnReturntoZero_Click);
+            // 
+            // btnStretchtoMaxStrain
+            // 
+            this.btnStretchtoMaxStrain.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnStretchtoMaxStrain.Location = new System.Drawing.Point(299, 518);
+            this.btnStretchtoMaxStrain.Name = "btnStretchtoMaxStrain";
+            this.btnStretchtoMaxStrain.Size = new System.Drawing.Size(275, 47);
+            this.btnStretchtoMaxStrain.TabIndex = 37;
+            this.btnStretchtoMaxStrain.Text = "STRETCH TO X%";
+            this.btnStretchtoMaxStrain.UseVisualStyleBackColor = true;
+            this.btnStretchtoMaxStrain.Click += new System.EventHandler(this.btnStretchtoMaxStrain_Click);
+            // 
+            // txtStrainCycles
+            // 
+            this.txtStrainCycles.Location = new System.Drawing.Point(10, 600);
+            this.txtStrainCycles.Multiline = true;
+            this.txtStrainCycles.Name = "txtStrainCycles";
+            this.txtStrainCycles.Size = new System.Drawing.Size(281, 37);
+            this.txtStrainCycles.TabIndex = 38;
+            // 
+            // btnSetStrainCycles
+            // 
+            this.btnSetStrainCycles.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnSetStrainCycles.Location = new System.Drawing.Point(297, 600);
+            this.btnSetStrainCycles.Name = "btnSetStrainCycles";
+            this.btnSetStrainCycles.Size = new System.Drawing.Size(276, 37);
+            this.btnSetStrainCycles.TabIndex = 39;
+            this.btnSetStrainCycles.Text = "Set Number of Strain Cycles";
+            this.btnSetStrainCycles.UseVisualStyleBackColor = true;
+            this.btnSetStrainCycles.Click += new System.EventHandler(this.btnSetStrainCycles_Click);
+            // 
+            // lblCyclicStretching
+            // 
+            this.lblCyclicStretching.AutoSize = true;
+            this.lblCyclicStretching.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblCyclicStretching.Location = new System.Drawing.Point(10, 568);
+            this.lblCyclicStretching.Name = "lblCyclicStretching";
+            this.lblCyclicStretching.Size = new System.Drawing.Size(279, 29);
+            this.lblCyclicStretching.TabIndex = 40;
+            this.lblCyclicStretching.Text = "CYCLIC STRETCHING";
+            // 
+            // btnCyclicStretching
+            // 
+            this.btnCyclicStretching.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnCyclicStretching.Location = new System.Drawing.Point(10, 643);
+            this.btnCyclicStretching.Name = "btnCyclicStretching";
+            this.btnCyclicStretching.Size = new System.Drawing.Size(563, 60);
+            this.btnCyclicStretching.TabIndex = 41;
+            this.btnCyclicStretching.Text = "CYCLIC STRETCHING";
+            this.btnCyclicStretching.UseVisualStyleBackColor = true;
+            this.btnCyclicStretching.Click += new System.EventHandler(this.btnCyclicStretching_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(587, 951);
+            this.ClientSize = new System.Drawing.Size(587, 1054);
+            this.Controls.Add(this.btnCyclicStretching);
+            this.Controls.Add(this.lblCyclicStretching);
+            this.Controls.Add(this.btnSetStrainCycles);
+            this.Controls.Add(this.txtStrainCycles);
+            this.Controls.Add(this.btnStretchtoMaxStrain);
+            this.Controls.Add(this.btnReturntoZero);
+            this.Controls.Add(this.btnLockParams);
+            this.Controls.Add(this.btnSetStrainIncrement);
+            this.Controls.Add(this.txtStrainIncrement);
+            this.Controls.Add(this.btnSetStrainRate);
+            this.Controls.Add(this.txtStrainRate);
+            this.Controls.Add(this.btnSetStrainTarget);
+            this.Controls.Add(this.txtStrainTarget);
+            this.Controls.Add(this.btnSetMembraneSize);
+            this.Controls.Add(this.txtMembraneSize);
+            this.Controls.Add(this.lblSetParameters);
+            this.Controls.Add(this.lblManualMovement);
+            this.Controls.Add(this.tbManualMove);
+            this.Controls.Add(this.btnSTOP);
             this.Controls.Add(this.btnZeroPosition);
             this.Controls.Add(this.btnTransmitToComPort);
             this.Controls.Add(this.chkByte5);
@@ -312,6 +543,7 @@
             this.Controls.Add(this.cmbComPorts);
             this.Name = "Form1";
             this.Text = "Form1";
+            ((System.ComponentModel.ISupportInitialize)(this.tbManualMove)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -344,6 +576,25 @@
         private System.Windows.Forms.CheckBox chkByte5;
         private System.Windows.Forms.Button btnTransmitToComPort;
         private System.Windows.Forms.Button btnZeroPosition;
+        private System.Windows.Forms.Button btnSTOP;
+        private System.Windows.Forms.TrackBar tbManualMove;
+        private System.Windows.Forms.Label lblManualMovement;
+        private System.Windows.Forms.Label lblSetParameters;
+        private System.Windows.Forms.TextBox txtMembraneSize;
+        private System.Windows.Forms.Button btnSetMembraneSize;
+        private System.Windows.Forms.TextBox txtStrainTarget;
+        private System.Windows.Forms.Button btnSetStrainTarget;
+        private System.Windows.Forms.TextBox txtStrainRate;
+        private System.Windows.Forms.Button btnSetStrainRate;
+        private System.Windows.Forms.TextBox txtStrainIncrement;
+        private System.Windows.Forms.Button btnSetStrainIncrement;
+        private System.Windows.Forms.Button btnLockParams;
+        private System.Windows.Forms.Button btnReturntoZero;
+        private System.Windows.Forms.Button btnStretchtoMaxStrain;
+        private System.Windows.Forms.TextBox txtStrainCycles;
+        private System.Windows.Forms.Button btnSetStrainCycles;
+        private System.Windows.Forms.Label lblCyclicStretching;
+        private System.Windows.Forms.Button btnCyclicStretching;
     }
 }
 
