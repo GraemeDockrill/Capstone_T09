@@ -73,6 +73,8 @@
             this.btnSetStrainCycles = new System.Windows.Forms.Button();
             this.lblCyclicStretching = new System.Windows.Forms.Label();
             this.btnCyclicStretching = new System.Windows.Forms.Button();
+            this.lblPositiveMove = new System.Windows.Forms.Label();
+            this.lblNegativeMove = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.tbManualMove)).BeginInit();
             this.SuspendLayout();
             // 
@@ -500,11 +502,33 @@
             this.btnCyclicStretching.UseVisualStyleBackColor = true;
             this.btnCyclicStretching.Click += new System.EventHandler(this.btnCyclicStretching_Click);
             // 
+            // lblPositiveMove
+            // 
+            this.lblPositiveMove.AutoSize = true;
+            this.lblPositiveMove.Font = new System.Drawing.Font("Microsoft Sans Serif", 20F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblPositiveMove.Location = new System.Drawing.Point(531, 261);
+            this.lblPositiveMove.Name = "lblPositiveMove";
+            this.lblPositiveMove.Size = new System.Drawing.Size(44, 46);
+            this.lblPositiveMove.TabIndex = 42;
+            this.lblPositiveMove.Text = "+";
+            // 
+            // lblNegativeMove
+            // 
+            this.lblNegativeMove.AutoSize = true;
+            this.lblNegativeMove.Font = new System.Drawing.Font("Microsoft Sans Serif", 20F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblNegativeMove.Location = new System.Drawing.Point(173, 261);
+            this.lblNegativeMove.Name = "lblNegativeMove";
+            this.lblNegativeMove.Size = new System.Drawing.Size(34, 46);
+            this.lblNegativeMove.TabIndex = 43;
+            this.lblNegativeMove.Text = "-";
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(587, 1054);
+            this.Controls.Add(this.lblNegativeMove);
+            this.Controls.Add(this.lblPositiveMove);
             this.Controls.Add(this.btnCyclicStretching);
             this.Controls.Add(this.lblCyclicStretching);
             this.Controls.Add(this.btnSetStrainCycles);
@@ -601,6 +625,8 @@
         private System.Windows.Forms.Button btnSetStrainCycles;
         private System.Windows.Forms.Label lblCyclicStretching;
         private System.Windows.Forms.Button btnCyclicStretching;
+        private System.Windows.Forms.Label lblPositiveMove;
+        private System.Windows.Forms.Label lblNegativeMove;
     }
 }
 

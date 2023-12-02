@@ -10,7 +10,7 @@
 // definiting variables
 bool stepState = false;
 bool ledState = negative;
-bool dirState = true;
+bool dirState = negative;
 
 // define bit constants
 int BIT0 = 0x0001;
@@ -33,10 +33,10 @@ Calculations (for 500ms):
 
 
   System clock 16 Mhz and Prescalar 8;
-  Timer 1 speed = 16Mhz/64 = 2 Mhz    
+  Timer 1 speed = 16Mhz/8 = 2 Mhz    
   Pulse time = 1/2 Mhz =  0.5us  
   Count up to = 0.5ms / 0.5us = 1000 (so this is the value the OCR register should have)
-  This means 1 step every 10 ms
+  This means 1 step every 1 ms
 */
 
 void setup() {

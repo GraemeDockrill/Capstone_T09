@@ -14,8 +14,10 @@ namespace CFP_control_program
     public partial class Form1 : Form
     {
         // constants
-        public int pulsePerRev = 200;
-        public int leadPerRev = 2;
+        public double stepPerRev = 200;
+        public double leadPerRev = 2;
+        public double pulsePerStep = 2;
+        public double pulsePerSec = 2000000;
         public int maxManualStepperSpeed = 5;       // [mm/s]
 
         // communication bytes
@@ -32,13 +34,13 @@ namespace CFP_control_program
 
         // data variables
         public int dataInt = 0;
-        public int manualSpeed;
+        public double manualSpeed;
         public int membraneSize_mm;
         public int membraneSize_steps;
         public int strainTarget_percent;
         public int strainTarget_steps;
         public int strainRate_percentPerSec;
-        public int strainRate_stepsPerSec;
+        public double strainRate_mmPerSec;
         public int strainIncrement_percent;
         public int strainIncrement_steps;
         public int strainCycles;
@@ -349,18 +351,18 @@ namespace CFP_control_program
             {
                 cmdByte0 = 1;
                 manualSpeed  = (maxManualStepperSpeed / (tbManualMove.Maximum - tbManualMove.Maximum/2)) * tbManualMove.Value - maxManualStepperSpeed;
-                // dataInt = manualSpeed * someScaling;
-
+                dataInt = Convert.ToInt16(1 / (manualSpeed / leadPerRev * stepPerRev * pulsePerStep) * pulsePerSec);
             }
-            else if (tbManualMove.Value < tbManualMove.Minimum / 2) // negative direction
+            else if (tbManualMove.Value < tbManualMove.Maximum / 2) // negative direction
             {
                 cmdByte0 = 2;
                 manualSpeed = (maxManualStepperSpeed / (tbManualMove.Minimum - tbManualMove.Maximum/2)) * tbManualMove.Value + maxManualStepperSpeed;
-                // dataInt = manualSpeed * someScaling;
-
+                dataInt = Convert.ToInt16(1 / (manualSpeed / leadPerRev * stepPerRev * pulsePerStep) * pulsePerSec);
             }
             else if (tbManualMove.Value == tbManualMove.Maximum / 2)
                 cmdByte0 = 11;
+
+            sendData = true;
         }
 
         private void btnSetMembraneSize_Click(object sender, EventArgs e)
@@ -369,7 +371,7 @@ namespace CFP_control_program
             {
                 cmdByte0 = 3;
                 membraneSize_mm = Int16.Parse(txtMembraneSize.Text);
-                membraneSize_steps = membraneSize_mm * pulsePerRev / leadPerRev;
+                membraneSize_steps = Convert.ToInt16(membraneSize_mm * stepPerRev / leadPerRev);
                 dataInt = membraneSize_steps;
                 sendData = true;
             }
@@ -393,7 +395,8 @@ namespace CFP_control_program
             {
                 cmdByte0 = 5;
                 strainRate_percentPerSec = Int16.Parse(txtStrainRate.Text);
-                strainRate_stepsPerSec = membraneSize_steps * strainRate_percentPerSec / 100;
+                strainRate_mmPerSec = membraneSize_mm * strainRate_percentPerSec / 100;
+                dataInt = Convert.ToInt16(1 / (strainRate_mmPerSec / leadPerRev * stepPerRev * pulsePerStep) * pulsePerSec);
                 sendData = true;
             }
         }

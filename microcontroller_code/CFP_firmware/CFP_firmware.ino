@@ -172,11 +172,8 @@ void setup() {
 
 void loop() {
   // put your main code here, to run repeatedly:
-  // digitalWrite(LED_BUILTIN, HIGH);
-  // delay(1000);
-  // digitalWrite(LED_BUILTIN, LOW);
+
   digitalWrite(LED_BUILTIN, ledState);
-  // delay(1000);
 
   // Serial.print("Reading: ");
   // Serial.print(scale.get_units(), 1); //scale.get_units() returns a float
@@ -216,6 +213,12 @@ void newDataParsing(){
       dataByte1 = dequeue(cb);
       ESCByte = dequeue(cb);
 
+      // Serial.write(startByte);
+      // Serial.write(cmdByte0);
+      // Serial.write(dataByte0);
+      // Serial.write(dataByte1);
+      // Serial.write(ESCByte);
+
       // switching back using ESCByte
       if(ESCByte & BIT1)
         dataByte0 = 255;
@@ -232,17 +235,15 @@ void newDataParsing(){
         // disable automatic & manual control-reenable if cyclic loading chosen
         autoControl = false;
         manualControl = false;
+        cyclicTesting = false;
 
         // parsing cmdByte0
         switch(cmdByte0){
           case 0:   // zero position
-            Serial.print("cmdByte0: ");
-            Serial.println(cmdByte0);
             currentPosSteps = 0;
+            targetPosSteps = 0;
             break;
           case 1:   // move in +ve position
-            Serial.print("cmdByte0: ");
-            Serial.println(cmdByte0);
             manualControl = true;
             manualStepTime = dataInt;
             OCR1A = manualStepTime;
@@ -250,8 +251,6 @@ void newDataParsing(){
             digitalWrite(ENA_PIN, enabled);  // enable stepper
             break;
           case 2:   // move in -ve position
-            Serial.print("cmdByte0: ");
-            Serial.println(cmdByte0);
             manualControl = true;
             manualStepTime = dataInt;
             OCR1A = manualStepTime;
@@ -259,53 +258,40 @@ void newDataParsing(){
             digitalWrite(ENA_PIN, enabled);  // enable stepper
             break;
           case 3:   // set membrane size [steps]
-            Serial.print("cmdByte0: ");
-            Serial.println(cmdByte0);
             membraneSizeSteps = dataInt;
             break;
           case 4:   // set strain target [steps]
-            Serial.print("cmdByte0: ");
-            Serial.println(cmdByte0);
             maxStrainSteps = dataInt;
             break;
           case 5:   // set strain rate
-            Serial.print("cmdByte0: ");
-            Serial.println(cmdByte0);
             autoStepTime = dataInt;
+            OCR1A = autoStepTime;
             break;
           case 6:   // set strain cycles
-            Serial.print("cmdByte0: ");
-            Serial.println(cmdByte0);
             targetStrainCycles = dataInt;
             break;
           case 7:   // set strain increment
-            Serial.print("cmdByte0: ");
-            Serial.println(cmdByte0);
+            // Serial.print("cmdByte0: ");
+            // Serial.println(cmdByte0);
             break;
           case 8:   // stretch to max strain
-            Serial.print("cmdByte0: ");
-            Serial.println(cmdByte0);
             targetPosSteps = maxStrainSteps;
             autoControl = true;
             digitalWrite(ENA_PIN, enabled);  // enable stepper
             break;
           case 9:   // return to zero position
-            Serial.print("cmdByte0: ");
-            Serial.println(cmdByte0);
             targetPosSteps = 0;
             autoControl = true;
             digitalWrite(ENA_PIN, enabled);  // enable stepper
             break;
           case 10:  // cyclic stretching
-            Serial.print("cmdByte0: ");
-            Serial.println(cmdByte0);
-            targetStrainCycles = dataInt;
+            targetPosSteps = maxStrainSteps;
             currentStrainCycles = 0;
             autoControl = true;
+            cyclicTesting = true;
+            digitalWrite(ENA_PIN, enabled);  // enable stepper
             break;
           case 11:  // STOP STEPPER
-            Serial.print("cmdByte0: ");
-            Serial.println(cmdByte0);
             digitalWrite(ENA_PIN, disabled);  // disable stepper
             break;
           default:
@@ -349,14 +335,22 @@ ISR(TIMER1_COMPA_vect){
     if(cyclicTesting){
 
       // if positive cyclic limit reached
-      if(currentPosSteps >= targetPosSteps && cyclicDirection == positive)
+      if(currentPosSteps >= targetPosSteps && cyclicDirection == positive){
         targetPosSteps = 0;
-
+        cyclicDirection = negative; // switch direction of travel
+        Serial.println("1");
+      }
+      // if negative cyclic limit reached
       else if(currentPosSteps <= 0 && cyclicDirection == negative){
         currentStrainCycles++;
+        cyclicDirection = positive; // switch direction of travel
         targetPosSteps = maxStrainSteps;
+        Serial.println("0");
       }
 
+      // when target cycles reached, stop testing
+      if(currentStrainCycles >= targetStrainCycles)
+        cyclicTesting = false;
     }
   }
   
