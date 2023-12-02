@@ -14,8 +14,9 @@ namespace CFP_control_program
     public partial class Form1 : Form
     {
         // constants
-        public int pulsePerRev = 400;
+        public int pulsePerRev = 200;
         public int leadPerRev = 2;
+        public int maxManualStepperSpeed = 5;       // [mm/s]
 
         // communication bytes
         public int numberOfDataPoints = 0;
@@ -31,6 +32,7 @@ namespace CFP_control_program
 
         // data variables
         public int dataInt = 0;
+        public int manualSpeed;
         public int membraneSize_mm;
         public int membraneSize_steps;
         public int strainTarget_percent;
@@ -343,18 +345,22 @@ namespace CFP_control_program
 
         private void tbManualMove_ValueChanged(object sender, EventArgs e)
         {
-            // positive direction
-            if(tbManualMove.Value > tbManualMove.Maximum / 2)
+            if (tbManualMove.Value > tbManualMove.Maximum / 2)      // positive direction
             {
                 cmdByte0 = 1;
-                dataInt = tbManualMove.Value;
-            }
+                manualSpeed  = (maxManualStepperSpeed / (tbManualMove.Maximum - tbManualMove.Maximum/2)) * tbManualMove.Value - maxManualStepperSpeed;
+                // dataInt = manualSpeed * someScaling;
 
-            // negative direction
-            if(tbManualMove.Value < tbManualMove.Minimum / 2)
+            }
+            else if (tbManualMove.Value < tbManualMove.Minimum / 2) // negative direction
             {
                 cmdByte0 = 2;
+                manualSpeed = (maxManualStepperSpeed / (tbManualMove.Minimum - tbManualMove.Maximum/2)) * tbManualMove.Value + maxManualStepperSpeed;
+                // dataInt = manualSpeed * someScaling;
+
             }
+            else if (tbManualMove.Value == tbManualMove.Maximum / 2)
+                cmdByte0 = 11;
         }
 
         private void btnSetMembraneSize_Click(object sender, EventArgs e)

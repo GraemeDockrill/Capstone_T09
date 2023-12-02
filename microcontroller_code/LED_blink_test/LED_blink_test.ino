@@ -1,20 +1,39 @@
 //#include "DFRobot_HX711.h"
 #include "HX711.h"
 
-// definiting variables
+// defines
+#define PUL_PIN 6
+#define DIR_PIN 7
+#define ENA_PIN 8
+#define LOADCELL_DOUT_PIN  3
+#define LOADCELL_SCK_PIN  2
+#define calibration_factor -260000
+
+#define positive 0
+#define negative 1
+#define disabled 1
+#define enabled 0
+
+// declaring variables
 int receivedChar;
 bool newData;
 bool autoControl = false;
 bool manualControl = false;
+bool stepState = false;
+bool dirState = negative;             // 0 = positive, 1 = negative
+bool cyclicTesting = false;
+bool cyclicDirection = positive;
+
 int ledState = 0;
 int currentPosSteps = 0;
 int targetPosSteps = 0;
 int membraneSizeSteps = 0;
 int maxStrainSteps = 0;
 int maxStrainRate_steps_per_sec = 0;
-int strainCycles = 0;
-int autoStepTime = 0;                 // received auto step time [ms]
-int manualStepTime = 0;               // received manual step time [ms]
+int targetStrainCycles = 0;
+int currentStrainCycles = 0;
+int autoStepTime = 0;                 // received auto step time for OCR1A register
+int manualStepTime = 0;               // received manual step time for OCR1A register
 int dataInt;
 
 int startByte;
@@ -28,12 +47,6 @@ int BIT0 = 0x0001;
 int BIT1 = 0x0002;
 int BIT2 = 0x0004;
 int BIT3 = 0x0008;
-
-#define PUL_PIN 6
-#define DIR_PIN 7
-#define LOADCELL_DOUT_PIN  3
-#define LOADCELL_SCK_PIN  2
-#define calibration_factor -260000
 
 HX711 scale;
 
@@ -109,13 +122,41 @@ int dequeue(CircularBuffer* cb){
 CircularBuffer* cb;
 
 
+/*
+Calculations (for 500ms): 
+  System clock 16 Mhz and Prescalar 8;
+  Timer 1 speed = 16Mhz/8 = 2 Mhz    
+  Pulse time = 1/2 Mhz =  0.5us  
+  Count up to = 0.5ms / 0.5us = 1000 (so this is the value the OCR register should have)
+  This means 1 step every 10 ms
+*/
+
+
 // --------- PROGRAM ---------
 
 void setup() {
   // put your setup code here, to run once:
   pinMode(LED_BUILTIN, OUTPUT);
+  pinMode(PUL_PIN, OUTPUT);
+  pinMode(DIR_PIN, OUTPUT);
+  pinMode(ENA_PIN, OUTPUT);
+
+  digitalWrite(ENA_PIN, disabled);
+
+
+  cli();  // interrupt disable
 
   cb = createCircularBuffer(BUFFER_SIZE); // create circular buffer at cb location
+
+  // timer 1 (interrupt each 500ms)
+  TCCR1A = 0;
+  TCCR1B = 0;
+
+  TCCR1B |= BIT1; // clock pre-scaler 8
+  TIMSK1 |= BIT1; // compare select on OCR1A
+  OCR1A = 1000;  // compare value for compare
+
+  sei();  // interrupt enable
 
   // set up load cell sensor
   //DFRobot_HX711 MyScale(A2, A3);
@@ -144,8 +185,7 @@ void loop() {
 
   checkSerialAvailable();
   newDataParsing();
-  stepMotor();
-  
+
 }
 
 
@@ -205,12 +245,18 @@ void newDataParsing(){
             Serial.println(cmdByte0);
             manualControl = true;
             manualStepTime = dataInt;
+            OCR1A = manualStepTime;
+            dirState = positive;
+            digitalWrite(ENA_PIN, enabled);  // enable stepper
             break;
           case 2:   // move in -ve position
             Serial.print("cmdByte0: ");
             Serial.println(cmdByte0);
             manualControl = true;
             manualStepTime = dataInt;
+            OCR1A = manualStepTime;
+            dirState = negative;
+            digitalWrite(ENA_PIN, enabled);  // enable stepper
             break;
           case 3:   // set membrane size [steps]
             Serial.print("cmdByte0: ");
@@ -220,17 +266,17 @@ void newDataParsing(){
           case 4:   // set strain target [steps]
             Serial.print("cmdByte0: ");
             Serial.println(cmdByte0);
-            targetPosSteps = dataInt;
+            maxStrainSteps = dataInt;
             break;
-          case 5:   // set strain rate [steps/second]
+          case 5:   // set strain rate
             Serial.print("cmdByte0: ");
             Serial.println(cmdByte0);
-            maxStrainRate_steps_per_sec = dataInt;
+            autoStepTime = dataInt;
             break;
           case 6:   // set strain cycles
             Serial.print("cmdByte0: ");
             Serial.println(cmdByte0);
-            strainCycles = dataInt;
+            targetStrainCycles = dataInt;
             break;
           case 7:   // set strain increment
             Serial.print("cmdByte0: ");
@@ -240,21 +286,27 @@ void newDataParsing(){
             Serial.print("cmdByte0: ");
             Serial.println(cmdByte0);
             targetPosSteps = maxStrainSteps;
+            autoControl = true;
+            digitalWrite(ENA_PIN, enabled);  // enable stepper
             break;
           case 9:   // return to zero position
             Serial.print("cmdByte0: ");
             Serial.println(cmdByte0);
             targetPosSteps = 0;
+            autoControl = true;
+            digitalWrite(ENA_PIN, enabled);  // enable stepper
             break;
           case 10:  // cyclic stretching
             Serial.print("cmdByte0: ");
             Serial.println(cmdByte0);
+            targetStrainCycles = dataInt;
+            currentStrainCycles = 0;
             autoControl = true;
             break;
           case 11:  // STOP STEPPER
             Serial.print("cmdByte0: ");
             Serial.println(cmdByte0);
-            // stepper already disabled
+            digitalWrite(ENA_PIN, disabled);  // disable stepper
             break;
           default:
             break;
@@ -263,12 +315,52 @@ void newDataParsing(){
       }
     }
 
+    // finished reading packet
     newData = false;
   }
 }
 
 
+// ISR for stepping the stepper motor
+ISR(TIMER1_COMPA_vect){
+  TCNT1 = 0; // reset timer to 0
 
-void stepMotor(){
+  // control type
+  if(manualControl){
+    stepState = !stepState; // switch state every interrupt
+  }
+  else if(autoControl){
+  
+    // check what side of target we're on and switch stepState
+    if(currentPosSteps > targetPosSteps){  // if above target, move back
+      dirState = negative;
+      stepState = !stepState; // switch state every interrupt
+      if(stepState == 1)
+        currentPosSteps--;
+    }
+    else if(currentPosSteps < targetPosSteps){ // if below target move forward
+      dirState = positive;
+      stepState = !stepState; // switch state every interrupt
+      if(stepState == 1)
+        currentPosSteps++;
+    }
 
+    // if cyclic stretching, move accordingly
+    if(cyclicTesting){
+
+      // if positive cyclic limit reached
+      if(currentPosSteps >= targetPosSteps && cyclicDirection == positive)
+        targetPosSteps = 0;
+
+      else if(currentPosSteps <= 0 && cyclicDirection == negative){
+        currentStrainCycles++;
+        targetPosSteps = maxStrainSteps;
+      }
+
+    }
+  }
+  
+  // update pins
+  digitalWrite(PUL_PIN, stepState);
+  digitalWrite(DIR_PIN, dirState);
 }
