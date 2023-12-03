@@ -29,11 +29,21 @@ namespace CFP_control_program
         public int dataByte1 = 0;
         public int ESCByte = 0;
 
+        // load cell bytes
+        public byte currentStepByte0;
+        public byte currentStepByte1;
+        public byte loadCellByte0;
+        public byte loadCellByte1;
+        public byte loadCellByte2;
+        public byte loadCellByte3;
+        public byte loadCellESCByte;
+
         // enabling/disabling parameter editing
         public bool parameterStatus = true;
 
         // data variables
         public int dataInt = 0;
+        public float loadCellFloat = 0;
         public double manualSpeed;
         public int membraneSize_mm;
         public int membraneSize_steps;
@@ -44,12 +54,28 @@ namespace CFP_control_program
         public int strainIncrement_percent;
         public int strainIncrement_steps;
         public int strainCycles;
+        public int currentPosSteps;
+        public double timeSinceDataReceived = 0;
 
         // define bit constants
         public int BIT0 = 0x0001;
         public int BIT1 = 0x0002;
         public int BIT2 = 0x0004;
         public int BIT3 = 0x0008;
+
+        public enum loadCellByte
+        {
+            startByte,
+            currentStepByte0,
+            currentStepByte1,
+            loadCellByte0,
+            loadCellByte1,
+            loadCellByte2,
+            loadCellByte3,
+            loadCellESCByte
+        }
+
+        public loadCellByte parsingState = loadCellByte.startByte;
 
         public Form1()
         {
@@ -126,7 +152,9 @@ namespace CFP_control_program
         {
             while (serialPort1.IsOpen && serialPort1.BytesToRead != 0)
             {
-                int currentByte = serialPort1.ReadByte();
+                int newByte = serialPort1.ReadByte();
+                byte currentByte = (byte) newByte;
+                timeSinceDataReceived = timeSinceDataReceived + 8.128;
                 numberOfDataPoints++;
                 if (cbComResponse.Checked)
                 {
@@ -139,8 +167,77 @@ namespace CFP_control_program
                     }));
                 }
 
+                if (currentByte == 255)
+                    parsingState = loadCellByte.startByte;
+
+                // figuring out which state to read data from
+                if (parsingState == loadCellByte.startByte)                 // start byte
+                {
+                    parsingState = loadCellByte.currentStepByte0;
+                }
+                else if (parsingState == loadCellByte.currentStepByte0)
+                {
+                    parsingState = loadCellByte.currentStepByte1;
+                    currentStepByte0 = currentByte;
+                }
+                else if (parsingState == loadCellByte.currentStepByte1)
+                {
+                    parsingState = loadCellByte.loadCellByte0;
+                    currentStepByte1 = currentByte;
+                }
+                else if (parsingState == loadCellByte.loadCellByte0)        // loadCellByte0
+                {
+                    parsingState = loadCellByte.loadCellByte1;
+                    loadCellByte0 = currentByte;
+                }
+                else if (parsingState == loadCellByte.loadCellByte1)        // loadCellByte1
+                {
+                    parsingState = loadCellByte.loadCellByte2;
+                    loadCellByte1 = currentByte;
+                }
+                else if (parsingState == loadCellByte.loadCellByte2)        // loadCellByte2
+                {
+                    parsingState = loadCellByte.loadCellByte3;
+                    loadCellByte2 = currentByte;
+                }
+                else if (parsingState == loadCellByte.loadCellByte3)        // loadCellByte3
+                {
+                    parsingState = loadCellByte.loadCellESCByte;
+                    loadCellByte3 = currentByte;
+                }
+                else if (parsingState == loadCellByte.loadCellESCByte)      // loadCellESCByte
+                {
+                    parsingState = loadCellByte.startByte;
+
+                    if (IsBitSet(loadCellESCByte, 5))
+                        currentStepByte0 = 255;
+                    if (IsBitSet(loadCellESCByte, 4))
+                        currentStepByte1 = 255;
+                    if (IsBitSet(loadCellESCByte, 3))
+                        loadCellByte0 = 255;
+                    if (IsBitSet(loadCellESCByte, 2))
+                        loadCellByte1 = 255;
+                    if (IsBitSet(loadCellESCByte, 1))
+                        loadCellByte2 = 255;
+                    if (IsBitSet(loadCellESCByte, 0))
+                        loadCellByte3 = 255;
+
+                    currentPosSteps = (currentStepByte0 << 8) + currentStepByte1;
+
+                    // combining bytes into float
+                    byte[] array = { loadCellByte0, loadCellByte1, loadCellByte2, loadCellByte3 };
+
+                    loadCellFloat = BitConverter.ToSingle(array, 0);
+
+                    //// add float to txtComOutput
+                    //Invoke((MethodInvoker)delegate
+                    //{
+                    //    txtComOutput.AppendText(loadCellFloat.ToString());
+                    //});
+                }
+
             }
-        }
+            }
 
         private void timer1_Tick(object sender, EventArgs e)
         {
@@ -489,6 +586,11 @@ namespace CFP_control_program
             }
             else
                 currentTextBox.Text = "";
+        }
+
+        bool IsBitSet(byte b, int pos)
+        {
+            return ((b >> pos) & 1) != 0;
         }
 
     }
