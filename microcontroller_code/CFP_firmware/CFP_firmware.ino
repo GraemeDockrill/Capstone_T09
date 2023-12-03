@@ -148,7 +148,7 @@ Calculations (for 0.5ms):
   This means 1 step every 10 ms
 */
 
-// interrupt for timer2: time = 1/(16Mhz/1024) * 127 =  8.128ms;
+// interrupt for timer2: time = 1/(16Mhz/1024) * 250 =  16ms;
 
 // --------- PROGRAM ---------
 
@@ -179,7 +179,7 @@ void setup() {
 
   TCCR2B |= BIT2 + BIT1 + BIT0; // clock prescaler 8
   TIMSK2 |= BIT2; // compare select on OCR2A
-  OCR2B = 127;
+  OCR2B = 250;
 
   sei();  // interrupt enable
 
@@ -189,7 +189,7 @@ void setup() {
   scale.set_scale(calibration_factor); //This value is obtained by using the SparkFun_HX711_Calibration sketch
   scale.tare(); //Assuming there is no weight on the scale at start up, reset the scale to 0
 
-  Serial.begin(9600);
+  Serial.begin(38400);
   Serial.print("Arduino Ready!");
 
   // interrupts();
@@ -329,6 +329,12 @@ ISR(TIMER1_COMPA_vect){
   // control type
   if(manualControl){
     stepState = !stepState; // switch state every interrupt
+    if(stepState == 1){
+      if(dirState == positive)
+        currentPosSteps++;
+      else if(dirState == negative)
+        currentPosSteps--;
+    }
   }
   else if(autoControl){
   
@@ -383,9 +389,11 @@ ISR(TIMER1_COMPA_vect){
 // ISR for accelerating the stepper motor
 ISR(TIMER2_COMPB_vect){
   
-  // loadCellReading = scale.get_units();
-  // u.temp_float = scale.get_units();
-  u.temp_float = 533174.1;
+  TCNT2 = 0; // reset timer to 0
+
+  if(scale.is_ready())
+    u.temp_float = scale.read();
+  // u.temp_float = 533174.1;
 
   currentStepByte0 = currentPosSteps >> 8;
   currentStepByte1 = currentPosSteps;

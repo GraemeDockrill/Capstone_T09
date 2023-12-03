@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Windows.Forms.DataVisualization.Charting;
 
 namespace CFP_control_program
 {
@@ -77,9 +78,16 @@ namespace CFP_control_program
 
         public loadCellByte parsingState = loadCellByte.startByte;
 
+        public int maxXValueLoadCellForce;
+        public int maxXValueCurrentStepPosition;
+
+        private Series seriesLoadCellForce, seriesCurrentStepPosition;
+
         public Form1()
         {
             InitializeComponent();
+            InitializeLoadCellForceChart();
+            InitializeCurrentStepPositionChart();
             cbComResponse.Checked = true;
             chkByte1.Checked = false;
             chkByte2.Checked = false;
@@ -92,6 +100,38 @@ namespace CFP_control_program
             txtByte4.Enabled = false;
             txtByte5.Enabled = false;
             ComPortUpdate();
+        }
+
+        // function for creating position chart
+        public void InitializeLoadCellForceChart()
+        {
+            ChartArea chartLoadCellForce = new ChartArea();
+            chartLoadCellForce.AxisX.Title = "Time [s]";
+            chartLoadCellForce.AxisY.Title = "Load Cell Force [kg]";
+            this.chartLoadCellForce.ChartAreas.Add(chartLoadCellForce);
+
+            seriesLoadCellForce = new Series();
+            seriesLoadCellForce.ChartType = SeriesChartType.Line;
+
+            this.chartLoadCellForce.Series.Add(seriesLoadCellForce);
+
+            this.chartLoadCellForce.ChartAreas[0].AxisX.Interval = 5;      // set X-axis interval to 10
+        }
+
+        // function for creating velocity chart
+        public void InitializeCurrentStepPositionChart()
+        {
+            ChartArea chartAreaDCVelocity = new ChartArea();
+            chartAreaDCVelocity.AxisX.Title = "Time [s]";
+            chartAreaDCVelocity.AxisY.Title = "Current Step Position [steps]";
+            this.chartCurrentStepPosition.ChartAreas.Add(chartAreaDCVelocity);
+
+            seriesCurrentStepPosition = new Series();
+            seriesCurrentStepPosition.ChartType = SeriesChartType.Line;
+
+            this.chartCurrentStepPosition.Series.Add(seriesCurrentStepPosition);
+
+            this.chartCurrentStepPosition.ChartAreas[0].AxisX.Interval = 5;      // set X-axis interval to 10
         }
 
         private void cmbComPorts_DropDown(object sender, EventArgs e)
@@ -154,7 +194,6 @@ namespace CFP_control_program
             {
                 int newByte = serialPort1.ReadByte();
                 byte currentByte = (byte) newByte;
-                timeSinceDataReceived = timeSinceDataReceived + 8.128;
                 numberOfDataPoints++;
                 if (cbComResponse.Checked)
                 {
@@ -174,6 +213,7 @@ namespace CFP_control_program
                 if (parsingState == loadCellByte.startByte)                 // start byte
                 {
                     parsingState = loadCellByte.currentStepByte0;
+                    timeSinceDataReceived += 0.016;
                 }
                 else if (parsingState == loadCellByte.currentStepByte0)
                 {
@@ -234,6 +274,43 @@ namespace CFP_control_program
                     //{
                     //    txtComOutput.AppendText(loadCellFloat.ToString());
                     //});
+
+
+
+                    // plot the load cell force graph
+                    chartLoadCellForce.Invoke((MethodInvoker)delegate
+                    {
+                        // plot new data
+                        seriesLoadCellForce.Points.AddXY(timeSinceDataReceived, loadCellFloat);
+
+                        // scroll the data window
+                        int minXValue = ((int)timeSinceDataReceived - 50 > 0) ? (int)timeSinceDataReceived - 50 - (int)timeSinceDataReceived % 5 : 0;
+                        maxXValueLoadCellForce = ((int)timeSinceDataReceived + 5) % 5 != 0 ? maxXValueLoadCellForce : (int)timeSinceDataReceived + 5;
+                        chartLoadCellForce.ChartAreas[0].AxisX.Minimum = minXValue;
+                        chartLoadCellForce.ChartAreas[0].AxisX.Maximum = maxXValueLoadCellForce;
+
+                        // redraw graph
+                        chartLoadCellForce.Invalidate();
+                    });
+
+                    // plot the current step position graph
+                    chartCurrentStepPosition.Invoke((MethodInvoker)delegate
+                    {
+                        // plot new data
+                        seriesCurrentStepPosition.Points.AddXY(timeSinceDataReceived, currentPosSteps);
+
+                        // scroll the data window
+                        int minXValue = ((int)timeSinceDataReceived - 50 > 0) ? (int)timeSinceDataReceived - 50 - (int)timeSinceDataReceived % 5 : 0;
+                        maxXValueCurrentStepPosition = ((int)timeSinceDataReceived + 5) % 5 != 0 ? maxXValueCurrentStepPosition : (int)timeSinceDataReceived + 5;
+                        chartCurrentStepPosition.ChartAreas[0].AxisX.Minimum = minXValue;
+                        chartCurrentStepPosition.ChartAreas[0].AxisX.Maximum = maxXValueCurrentStepPosition;
+
+                        // redraw graph
+                        chartCurrentStepPosition.Invalidate();
+                    });
+
+
+
                 }
 
             }
@@ -592,6 +669,5 @@ namespace CFP_control_program
         {
             return ((b >> pos) & 1) != 0;
         }
-
     }
 }

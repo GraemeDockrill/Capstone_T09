@@ -29,6 +29,8 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
+            System.Windows.Forms.DataVisualization.Charting.Title title1 = new System.Windows.Forms.DataVisualization.Charting.Title();
+            System.Windows.Forms.DataVisualization.Charting.Title title2 = new System.Windows.Forms.DataVisualization.Charting.Title();
             this.cmbComPorts = new System.Windows.Forms.ComboBox();
             this.lblBaudRate = new System.Windows.Forms.Label();
             this.txtBaudRate = new System.Windows.Forms.TextBox();
@@ -75,7 +77,11 @@
             this.btnCyclicStretching = new System.Windows.Forms.Button();
             this.lblPositiveMove = new System.Windows.Forms.Label();
             this.lblNegativeMove = new System.Windows.Forms.Label();
+            this.chartLoadCellForce = new System.Windows.Forms.DataVisualization.Charting.Chart();
+            this.chartCurrentStepPosition = new System.Windows.Forms.DataVisualization.Charting.Chart();
             ((System.ComponentModel.ISupportInitialize)(this.tbManualMove)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.chartLoadCellForce)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.chartCurrentStepPosition)).BeginInit();
             this.SuspendLayout();
             // 
             // cmbComPorts
@@ -522,11 +528,35 @@
             this.lblNegativeMove.TabIndex = 43;
             this.lblNegativeMove.Text = "-";
             // 
+            // chartLoadCellForce
+            // 
+            this.chartLoadCellForce.Location = new System.Drawing.Point(590, 36);
+            this.chartLoadCellForce.Name = "chartLoadCellForce";
+            this.chartLoadCellForce.Size = new System.Drawing.Size(1009, 491);
+            this.chartLoadCellForce.TabIndex = 44;
+            this.chartLoadCellForce.Text = "chart1";
+            title1.Name = "Load Cell Force";
+            title1.Text = "Load Cell Force";
+            this.chartLoadCellForce.Titles.Add(title1);
+            // 
+            // chartCurrentStepPosition
+            // 
+            this.chartCurrentStepPosition.Location = new System.Drawing.Point(590, 533);
+            this.chartCurrentStepPosition.Name = "chartCurrentStepPosition";
+            this.chartCurrentStepPosition.Size = new System.Drawing.Size(1009, 491);
+            this.chartCurrentStepPosition.TabIndex = 45;
+            this.chartCurrentStepPosition.Text = "chart2";
+            title2.Name = "Current Step Position";
+            title2.Text = "Current Step Position";
+            this.chartCurrentStepPosition.Titles.Add(title2);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(587, 1054);
+            this.ClientSize = new System.Drawing.Size(1611, 1054);
+            this.Controls.Add(this.chartCurrentStepPosition);
+            this.Controls.Add(this.chartLoadCellForce);
             this.Controls.Add(this.lblNegativeMove);
             this.Controls.Add(this.lblPositiveMove);
             this.Controls.Add(this.btnCyclicStretching);
@@ -574,6 +604,8 @@
             this.Name = "Form1";
             this.Text = "Form1";
             ((System.ComponentModel.ISupportInitialize)(this.tbManualMove)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.chartLoadCellForce)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.chartCurrentStepPosition)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -627,6 +659,8 @@
         private System.Windows.Forms.Button btnCyclicStretching;
         private System.Windows.Forms.Label lblPositiveMove;
         private System.Windows.Forms.Label lblNegativeMove;
+        private System.Windows.Forms.DataVisualization.Charting.Chart chartLoadCellForce;
+        private System.Windows.Forms.DataVisualization.Charting.Chart chartCurrentStepPosition;
     }
 }
 
