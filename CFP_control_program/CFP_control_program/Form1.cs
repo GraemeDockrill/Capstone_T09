@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.IO;
 using System.IO.Ports;
 using System.Linq;
 using System.Text;
@@ -20,6 +21,7 @@ namespace CFP_control_program
         public double pulsePerStep = 2;
         public double pulsePerSec = 2000000;
         public int maxManualStepperSpeed = 5;       // [mm/s]
+        public int loadCellCalibrationFactor = -409000; // Calibrated using Arduino program
 
         // communication bytes
         public int numberOfDataPoints = 0;
@@ -45,6 +47,7 @@ namespace CFP_control_program
         // data variables
         public int dataInt = 0;
         public float loadCellFloat = 0;
+        public float loadCellForce = 0;
         public double manualSpeed;
         public int membraneSize_mm;
         public int membraneSize_steps;
@@ -56,7 +59,8 @@ namespace CFP_control_program
         public int strainIncrement_steps;
         public int strainCycles;
         public int currentPosSteps;
-        public double timeSinceDataReceived = 0;
+        public double currentPos_mm;
+        public double timeCount = 0;
 
         // define bit constants
         public int BIT0 = 0x0001;
@@ -81,7 +85,9 @@ namespace CFP_control_program
         public int maxXValueLoadCellForce;
         public int maxXValueCurrentStepPosition;
 
-        private Series seriesLoadCellForce, seriesCurrentStepPosition;
+        private Series seriesLoadCellForce, seriesCurrentPosition;
+
+        StreamWriter outputFile;
 
         public Form1()
         {
@@ -102,7 +108,7 @@ namespace CFP_control_program
             ComPortUpdate();
         }
 
-        // function for creating position chart
+        // function for creating load cell force chart
         public void InitializeLoadCellForceChart()
         {
             ChartArea chartLoadCellForce = new ChartArea();
@@ -118,18 +124,18 @@ namespace CFP_control_program
             this.chartLoadCellForce.ChartAreas[0].AxisX.Interval = 5;      // set X-axis interval to 10
         }
 
-        // function for creating velocity chart
+        // function for creating stepper position chart
         public void InitializeCurrentStepPositionChart()
         {
             ChartArea chartAreaDCVelocity = new ChartArea();
             chartAreaDCVelocity.AxisX.Title = "Time [s]";
-            chartAreaDCVelocity.AxisY.Title = "Current Step Position [steps]";
+            chartAreaDCVelocity.AxisY.Title = "Current Position [mm]";
             this.chartCurrentStepPosition.ChartAreas.Add(chartAreaDCVelocity);
 
-            seriesCurrentStepPosition = new Series();
-            seriesCurrentStepPosition.ChartType = SeriesChartType.Line;
+            seriesCurrentPosition = new Series();
+            seriesCurrentPosition.ChartType = SeriesChartType.Line;
 
-            this.chartCurrentStepPosition.Series.Add(seriesCurrentStepPosition);
+            this.chartCurrentStepPosition.Series.Add(seriesCurrentPosition);
 
             this.chartCurrentStepPosition.ChartAreas[0].AxisX.Interval = 5;      // set X-axis interval to 10
         }
@@ -159,7 +165,7 @@ namespace CFP_control_program
                 {
                     try
                     {
-                        serialPort1.BaudRate = Convert.ToInt16(txtBaudRate.Text);
+                        serialPort1.BaudRate = Convert.ToInt32(txtBaudRate.Text);
                         serialPort1.PortName = cmbComPorts.SelectedItem.ToString();
                         serialPort1.Open();
                         btnComConnect.Text = "Disconnect";
@@ -213,7 +219,7 @@ namespace CFP_control_program
                 if (parsingState == loadCellByte.startByte)                 // start byte
                 {
                     parsingState = loadCellByte.currentStepByte0;
-                    timeSinceDataReceived += 0.016;
+                    timeCount += 0.016;
                 }
                 else if (parsingState == loadCellByte.currentStepByte0)
                 {
@@ -249,6 +255,11 @@ namespace CFP_control_program
                 {
                     parsingState = loadCellByte.startByte;
 
+                    Invoke((MethodInvoker)delegate
+                    {
+                        txtComOutput.AppendText("\r\n");
+                    });
+
                     if (IsBitSet(loadCellESCByte, 5))
                         currentStepByte0 = 255;
                     if (IsBitSet(loadCellESCByte, 4))
@@ -263,13 +274,15 @@ namespace CFP_control_program
                         loadCellByte3 = 255;
 
                     currentPosSteps = (currentStepByte0 << 8) + currentStepByte1;
+                    currentPos_mm = currentPosSteps / stepPerRev * leadPerRev;
+
 
                     // combining bytes into float
                     byte[] array = { loadCellByte0, loadCellByte1, loadCellByte2, loadCellByte3 };
 
                     loadCellFloat = BitConverter.ToSingle(array, 0);
-
-                    //// add float to txtComOutput
+                    loadCellForce = loadCellFloat; // / loadCellCalibrationFactor;
+                    // add float to txtComOutput
                     //Invoke((MethodInvoker)delegate
                     //{
                     //    txtComOutput.AppendText(loadCellFloat.ToString());
@@ -281,40 +294,52 @@ namespace CFP_control_program
                     chartLoadCellForce.Invoke((MethodInvoker)delegate
                     {
                         // plot new data
-                        seriesLoadCellForce.Points.AddXY(timeSinceDataReceived, loadCellFloat);
+                        seriesLoadCellForce.Points.AddXY(timeCount, loadCellForce);
 
+                        // CODE BELOW NOT NEEDED 
                         // scroll the data window
-                        int minXValue = ((int)timeSinceDataReceived - 50 > 0) ? (int)timeSinceDataReceived - 50 - (int)timeSinceDataReceived % 5 : 0;
-                        maxXValueLoadCellForce = ((int)timeSinceDataReceived + 5) % 5 != 0 ? maxXValueLoadCellForce : (int)timeSinceDataReceived + 5;
-                        chartLoadCellForce.ChartAreas[0].AxisX.Minimum = minXValue;
-                        chartLoadCellForce.ChartAreas[0].AxisX.Maximum = maxXValueLoadCellForce;
+                        //int minXValue = ((int)timeCount - 50 > 0) ? (int)timeCount - 50 - (int)timeCount % 5 : 0;
+                        //maxXValueLoadCellForce = ((int)timeCount + 5) % 5 != 0 ? maxXValueLoadCellForce : (int)timeCount + 5;
+                        //chartLoadCellForce.ChartAreas[0].AxisX.Minimum = minXValue;
+                        //chartLoadCellForce.ChartAreas[0].AxisX.Maximum = maxXValueLoadCellForce;
 
                         // redraw graph
-                        chartLoadCellForce.Invalidate();
+                        //chartLoadCellForce.Invalidate();
+
+                        // remove old data
+                        //seriesLoadCellForce.Points.Remove(loadCellForce);
+
                     });
 
                     // plot the current step position graph
                     chartCurrentStepPosition.Invoke((MethodInvoker)delegate
                     {
                         // plot new data
-                        seriesCurrentStepPosition.Points.AddXY(timeSinceDataReceived, currentPosSteps);
+                        seriesCurrentPosition.Points.AddXY(timeCount, currentPos_mm);
 
-                        // scroll the data window
-                        int minXValue = ((int)timeSinceDataReceived - 50 > 0) ? (int)timeSinceDataReceived - 50 - (int)timeSinceDataReceived % 5 : 0;
-                        maxXValueCurrentStepPosition = ((int)timeSinceDataReceived + 5) % 5 != 0 ? maxXValueCurrentStepPosition : (int)timeSinceDataReceived + 5;
-                        chartCurrentStepPosition.ChartAreas[0].AxisX.Minimum = minXValue;
-                        chartCurrentStepPosition.ChartAreas[0].AxisX.Maximum = maxXValueCurrentStepPosition;
+                        // CODE BELOW NOT NEEDED
+                            // scroll the data window
+                            //int minXValue = ((int)timeCount - 50 > 0) ? (int)timeCount - 50 - (int)timeCount % 5 : 0;
+                            //maxXValueCurrentStepPosition = ((int)timeCount + 5) % 5 != 0 ? maxXValueCurrentStepPosition : (int)timeCount + 5;
+                            //chartCurrentStepPosition.ChartAreas[0].AxisX.Minimum = minXValue;
+                            //chartCurrentStepPosition.ChartAreas[0].AxisX.Maximum = maxXValueCurrentStepPosition;
 
-                        // redraw graph
-                        chartCurrentStepPosition.Invalidate();
+                            // redraw graph
+                            //chartCurrentStepPosition.Invalidate();
+
+                        // remove old data
+
                     });
 
-
-
+                    // Check if save file checkbox is checked and if so write the time and position to the outputFile
+                    if (cbSaveFile.Checked == true)
+                    {
+                        outputFile.Write(timeCount.ToString() + ", " + currentPos_mm.ToString() + ", " +
+                            loadCellForce.ToString() + "\r\n");
+                    }
                 }
-
             }
-            }
+        }
 
         private void timer1_Tick(object sender, EventArgs e)
         {
@@ -663,6 +688,38 @@ namespace CFP_control_program
             }
             else
                 currentTextBox.Text = "";
+        }
+
+        private void btnSelectFileName_Click(object sender, EventArgs e)
+        {
+            if (saveFileDialog1.ShowDialog() == DialogResult.OK)
+                txtFileName.Text = saveFileDialog1.FileName;
+        }
+
+        private void cbSaveFile_CheckedChanged(object sender, EventArgs e)
+        {
+            // For checking if recording data and starting new streamwriter
+            {
+                if (cbSaveFile.Checked)
+                    outputFile = new StreamWriter(txtFileName.Text);
+                else if (!cbSaveFile.Checked)
+                    outputFile.Close();
+            }
+        }
+
+        private void btnResetAllCharts_Click(object sender, EventArgs e)
+        // Clears all charts
+        {
+            if (cbSaveFile.Checked)
+                btnResetAllCharts.Text = "Uncheck save file checkbox";
+
+            else
+            {
+                timeCount = 0;
+                seriesCurrentPosition.Points.Clear();
+                seriesLoadCellForce.Points.Clear();
+                btnResetAllCharts.Text = "Reset All Charts";
+            }
         }
 
         bool IsBitSet(byte b, int pos)

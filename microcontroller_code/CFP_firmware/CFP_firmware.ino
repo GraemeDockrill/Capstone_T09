@@ -7,7 +7,7 @@
 #define ENA_PIN 8
 #define LOADCELL_DOUT_PIN  3
 #define LOADCELL_SCK_PIN  2
-#define calibration_factor -260000
+#define calibration_factor -409000
 #define setDelay 10
 
 #define positive 0
@@ -37,6 +37,8 @@ int startDelay;                       // small delay before moving the stage
 float loadCellReading;                // reading from the loadcell
 
 int dataInt;                          // combined dataByte0 and dataByte1
+
+int loadCellCount;                    // counter for load cell data reading
 
 // received data packet bytes
 int startByte;
@@ -274,6 +276,7 @@ void newDataParsing(){
             break;
           case 4:   // set strain target [steps]
             maxStrainSteps = dataInt;
+            targetPosSteps = maxStrainSteps;
             break;
           case 5:   // set strain rate
             autoStepTime = dataInt;
@@ -289,13 +292,13 @@ void newDataParsing(){
           case 8:   // stretch to max strain
             targetPosSteps = maxStrainSteps;
             autoControl = true;
-            startDelay = setDelay;
+            //startDelay = setDelay;
             digitalWrite(ENA_PIN, enabled);  // enable stepper
             break;
           case 9:   // return to zero position
             targetPosSteps = 0;
             autoControl = true;
-            startDelay = setDelay;
+            //startDelay = setDelay;
             digitalWrite(ENA_PIN, enabled);  // enable stepper
             break;
           case 10:  // cyclic stretching
@@ -338,46 +341,45 @@ ISR(TIMER1_COMPA_vect){
   }
   else if(autoControl){
   
-    if(startDelay <= 0){
 
-      // check what side of target we're on and switch stepState
-      if(currentPosSteps > targetPosSteps){  // if above target, move back
-        dirState = negative;
-        stepState = !stepState; // switch state every interrupt
-        if(stepState == 1)
-          currentPosSteps--;
-      }
-      else if(currentPosSteps < targetPosSteps){ // if below target move forward
-        dirState = positive;
-        stepState = !stepState; // switch state every interrupt
-        if(stepState == 1)
-          currentPosSteps++;
-      }
-
-      // if cyclic stretching, move accordingly
-      if(cyclicTesting){
-
-        // if positive cyclic limit reached
-        if(currentPosSteps >= targetPosSteps && cyclicDirection == positive){
-          targetPosSteps = 0;
-          startDelay = setDelay;
-          cyclicDirection = negative; // switch direction of travel
-        }
-        // if negative cyclic limit reached
-        else if(currentPosSteps <= 0 && cyclicDirection == negative){
-          currentStrainCycles++;
-          startDelay = setDelay;
-          cyclicDirection = positive; // switch direction of travel
-          targetPosSteps = maxStrainSteps;
-        }
-
-        // when target cycles reached, stop testing
-        if(currentStrainCycles >= targetStrainCycles)
-          cyclicTesting = false;
-      }
+    // check what side of target we're on and switch stepState
+    if(currentPosSteps > targetPosSteps){  // if above target, move back
+      dirState = negative;
+      stepState = !stepState; // switch state every interrupt
+      if(stepState == 1)
+        currentPosSteps--;
+    }
+    else if(currentPosSteps < targetPosSteps){ // if below target move forward
+      dirState = positive;
+      stepState = !stepState; // switch state every interrupt
+      if(stepState == 1)
+        currentPosSteps++;
     }
 
-    startDelay--;
+    // if cyclic stretching, move accordingly
+    if(cyclicTesting){
+
+      // if positive cyclic limit reached
+      if(currentPosSteps >= targetPosSteps && cyclicDirection == positive){
+        targetPosSteps = 0;
+        startDelay = setDelay;
+        cyclicDirection = negative; // switch direction of travel
+      }
+      // if negative cyclic limit reached
+      else if(currentPosSteps <= 0 && cyclicDirection == negative){
+        currentStrainCycles++;
+        startDelay = setDelay;
+        cyclicDirection = positive; // switch direction of travel
+        targetPosSteps = maxStrainSteps;
+      }
+
+      // when target cycles reached, stop testing
+      if(currentStrainCycles >= targetStrainCycles)
+        cyclicTesting = false;
+      
+    }
+
+    //startDelay--;
   }
   
   // update pins
@@ -386,48 +388,53 @@ ISR(TIMER1_COMPA_vect){
 }
 
 
-// ISR for accelerating the stepper motor
+// ISR for reading the data for load cell
 ISR(TIMER2_COMPB_vect){
   
   TCNT2 = 0; // reset timer to 0
+  loadCellCount++;
+  if(loadCellCount>=3) {
 
-  if(scale.is_ready())
-    u.temp_float = scale.read();
-  // u.temp_float = 533174.1;
+    if(scale.is_ready())
+      //u.temp_float = scale.read();
+      u.temp_float = scale.get_units();
+    // u.temp_float = 533174.1;
 
-  currentStepByte0 = currentPosSteps >> 8;
-  currentStepByte1 = currentPosSteps;
+    currentStepByte0 = currentPosSteps >> 8;
+    currentStepByte1 = currentPosSteps;
 
-  if(currentStepByte0 >= 255)
-    loadCellESCByte |= BIT5;
-  if(currentStepByte1 >= 255)
-    loadCellESCByte |= BIT4;
-  if(u.temp_byte[0] >= 255){
-    u.temp_byte[0] = 0;
-    loadCellESCByte |= BIT3;
+    if(currentStepByte0 >= 255)
+      loadCellESCByte |= BIT5;
+    if(currentStepByte1 >= 255)
+      loadCellESCByte |= BIT4;
+    if(u.temp_byte[0] >= 255){
+      u.temp_byte[0] = 0;
+      loadCellESCByte |= BIT3;
+    }
+    if(u.temp_byte[1] >= 255){
+      u.temp_byte[1] = 0;
+      loadCellESCByte |= BIT2;
+    }
+    if(u.temp_byte[2] >= 255){
+      u.temp_byte[2] = 0;
+      loadCellESCByte |= BIT1;
+    }
+    if(u.temp_byte[3] >= 255){
+      u.temp_byte[3] = 0;
+      loadCellESCByte |= BIT0;
+    }
+
+    Serial.write(255);  // startByte
+    Serial.write(currentStepByte0);
+    Serial.write(currentStepByte1);
+    Serial.write(u.temp_byte[0]);
+    Serial.write(u.temp_byte[1]);
+    Serial.write(u.temp_byte[2]);
+    Serial.write(u.temp_byte[3]);
+    Serial.write(loadCellESCByte);
+
+    loadCellESCByte = 0;
+
+    loadCellCount = 0;
   }
-  if(u.temp_byte[1] >= 255){
-    u.temp_byte[1] = 0;
-    loadCellESCByte |= BIT2;
-  }
-  if(u.temp_byte[2] >= 255){
-    u.temp_byte[2] = 0;
-    loadCellESCByte |= BIT1;
-  }
-  if(u.temp_byte[3] >= 255){
-    u.temp_byte[3] = 0;
-    loadCellESCByte |= BIT0;
-  }
-
-  Serial.write(255);  // startByte
-  Serial.write(currentStepByte0);
-  Serial.write(currentStepByte1);
-  Serial.write(u.temp_byte[0]);
-  Serial.write(u.temp_byte[1]);
-  Serial.write(u.temp_byte[2]);
-  Serial.write(u.temp_byte[3]);
-  Serial.write(loadCellESCByte);
-
-  loadCellESCByte = 0;
-  
 }
