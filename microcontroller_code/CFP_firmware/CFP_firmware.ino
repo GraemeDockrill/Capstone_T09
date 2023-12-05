@@ -262,14 +262,14 @@ void newDataParsing(){
             manualStepTime = dataInt;
             OCR1A = manualStepTime;
             dirState = positive;
-            digitalWrite(ENA_PIN, enabled);  // enable stepper
+            //digitalWrite(ENA_PIN, enabled);  // enable stepper
             break;
           case 2:   // move in -ve position
             manualControl = true;
             manualStepTime = dataInt;
             OCR1A = manualStepTime;
             dirState = negative;
-            digitalWrite(ENA_PIN, enabled);  // enable stepper
+            //digitalWrite(ENA_PIN, enabled);  // enable stepper
             break;
           case 3:   // set membrane size [steps]
             membraneSizeSteps = dataInt;
@@ -293,13 +293,13 @@ void newDataParsing(){
             targetPosSteps = maxStrainSteps;
             autoControl = true;
             //startDelay = setDelay;
-            digitalWrite(ENA_PIN, enabled);  // enable stepper
+            //digitalWrite(ENA_PIN, enabled);  // enable stepper
             break;
           case 9:   // return to zero position
             targetPosSteps = 0;
             autoControl = true;
             //startDelay = setDelay;
-            digitalWrite(ENA_PIN, enabled);  // enable stepper
+            //digitalWrite(ENA_PIN, enabled);  // enable stepper
             break;
           case 10:  // cyclic stretching
             targetPosSteps = maxStrainSteps;
@@ -307,10 +307,10 @@ void newDataParsing(){
             autoControl = true;
             cyclicTesting = true;
             startDelay = setDelay;
-            digitalWrite(ENA_PIN, enabled);  // enable stepper
+            //digitalWrite(ENA_PIN, enabled);  // enable stepper
             break;
           case 11:  // STOP STEPPER
-            digitalWrite(ENA_PIN, disabled);  // disable stepper
+            //digitalWrite(ENA_PIN, disabled);  // disable stepper
             break;
           default:
             break;
