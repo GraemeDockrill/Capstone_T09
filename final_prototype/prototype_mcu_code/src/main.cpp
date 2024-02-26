@@ -95,17 +95,20 @@ static void Thread2(void* arg){
     // remove message from queue
     xQueueReceive(queue, (void *) &message.temp_long, portMAX_DELAY);
 
+    timestamp.temp_int = (int) millis();
+
     //Serial.println("thread 2 sending UART");
     // send message over UART
     Serial.write(255);
-    Serial.write(message.temp_byte[0]);
-    Serial.write(message.temp_byte[1]);
-    Serial.write(message.temp_byte[2]);
-    Serial.write(message.temp_byte[3]);
-    Serial.write(message.temp_byte[4]);
-    Serial.write(message.temp_byte[5]);
-    Serial.write(message.temp_byte[6]);
-    Serial.write(message.temp_byte[7]);
+    for(int i = 0; i < 4; i++){
+      Serial.write(timestamp.temp_byte[i]);       // write time stamp bytes
+    }
+    for(int i = 0; i < 8; i++){
+      Serial.write(message.temp_byte[i]);         // write load cell bytes
+    }
+    for(int i = 0; i < 8; i++){
+      Serial.write(0);                            // write encoder padding bytes
+    }
     Serial.write(ESCByte);
 
     //Serial.println("thread 2 releasing mutex");
@@ -155,23 +158,7 @@ void setup() {
 }
 
 void loop() {
-  // // put your main code here, to run repeatedly:
-  // digitalWrite(LED_BUILTIN, HIGH);
-  // delay(100);
-  // x++;
-  // y = x*x;
-  // Serial.write(x);
-  // Serial.write(y);
-  // // Serial.write(",");
-  // // Serial.write(y);
-  // // Serial.write("\n");
-  // digitalWrite(LED_BUILTIN, LOW);
-  // delay(100);
-  // x++;
-  // y = x*x;
-  // Serial.write(x);
-  // Serial.write(y);
-
+  // nothing in here
 }
 
 // define function for comuptuing y from x

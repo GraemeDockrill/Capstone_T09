@@ -4,10 +4,15 @@
 #define header_h
 
 // define union for UART message
-union u_tag {
+union u_message {
    long temp_long ; 
    byte temp_byte[8] ;
 } message;
+
+union u_timestamp {
+    int temp_int ;
+    byte temp_byte[4] ;
+} timestamp;
 
 struct number{
     float x;
