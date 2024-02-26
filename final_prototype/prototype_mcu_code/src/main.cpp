@@ -8,10 +8,12 @@ SemaphoreHandle_t mutex, empty, full;
 QueueHandle_t queue;
 
 float x = 0;
-float y;
+float y3;
+float y2;
 
-// declare function for computing y from given x value
-float computeY (float x);
+// declare functions for computing y from given x value
+float computeY1 (float x);
+float computeY2 (float x);
 
 
 // declare thread function for thread 1
@@ -31,7 +33,8 @@ static void Thread1(void* arg){
 
     //Serial.println("thread 1 computing y = x*x");
 
-    y =  computeY(x);
+    y3 = computeY1(x);
+    y2 = computeY2(x);
 
     //Serial.println("thread 1 taking empty buffer");
     // take empty buffer semaphore
@@ -40,8 +43,8 @@ static void Thread1(void* arg){
     //Serial.println("thread 1 taking mutex");
     xSemaphoreTake(mutex, portMAX_DELAY);
 
-    num.x = x;
-    num.y = y;
+    num.x = y3;
+    num.y = y2;
 
     //Serial.println("thread 1 enqueing");
     xQueueSend(queue, (void *) &num, 0);
@@ -162,7 +165,10 @@ void loop() {
 }
 
 // define function for comuptuing y from x
-float computeY (float x){
-
+float computeY1 (float x){
   return sin(x);
+}
+
+float computeY2 (float x){
+  return cos(x);
 }
