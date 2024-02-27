@@ -47,9 +47,9 @@ class RealTimeGraphThread(threading.Thread):
         # Create a canvas to display the plot
         self.canvas = FigureCanvasTkAgg(self.fig, master=self.master)
         if self.y_sets != 4:
-            self.canvas.get_tk_widget().grid(row=1, column=6, sticky="nsew", rowspan=7)
+            self.canvas.get_tk_widget().grid(row=1, column=5, sticky="nsew", rowspan=7)
         else:
-            self.canvas.get_tk_widget().grid(row=9, column=6, sticky="nsew", rowspan=7)
+            self.canvas.get_tk_widget().grid(row=9, column=5, sticky="nsew", rowspan=7)
 
     def run(self):
         while self.running:
