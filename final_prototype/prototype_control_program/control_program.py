@@ -32,6 +32,9 @@ class CellStretcherApp:
         self.lead_mm_per_rev = 5
         self.motor_pulse_per_rev = 800
         self.encoder_pulse_per_rev = 1000
+        self.max_steps = 65535              # placeholder value
+        self.max_strain_target = 100        # placeholder value
+        self.max_strain_rate = 100          # Placeholder value
 
         # define default file name
         self.file_name = "testfile.csv"
@@ -126,7 +129,7 @@ class CellStretcherApp:
         self.btn_set_zero.grid(row=1, column=1, columnspan=2, sticky="nsew")
         self.btn_stop = tk.Button(root, text="STOP", command=lambda: self.button_click(1))
         self.btn_stop.grid(row=2, column=1, rowspan=2, columnspan=2, sticky="nsew")
-        self.btn_set_parameters = tk.Button(root, text="Set Parameters", command=lambda: self.button_click(1))
+        self.btn_set_parameters = tk.Button(root, text="Set Parameters", command=self.btn_set_parameters_click)
         self.btn_set_parameters.grid(row=8, column=1, columnspan=5, sticky="nsew")
         self.btn_move_to_zero = tk.Button(root, text="Move to 0", command=lambda: self.button_click(1))
         self.btn_move_to_zero.grid(row=9, column=1, rowspan=2, columnspan=3, sticky="nsew")
@@ -202,8 +205,9 @@ class CellStretcherApp:
                 self.serial_reader_thread.close()
                 self.btn_connect.config(text="Connect")
                 self.COM_connected = False
-            except:
+            except Exception as e:
                 print("Error closing serial port!")
+                print(e)
         else:
             try:
                 self.serial_port = self.selected_port.get()
@@ -212,8 +216,9 @@ class CellStretcherApp:
                 if self.serial_reader_thread.isOpen():
                     self.btn_connect.config(text="Disconnect")
                     self.COM_connected = True
-            except:
+            except Exception as e:
                 print("Error opening serial port!")
+                print(e)
 
     # called when save to file button clicked
     def btn_save_to_file_click(self):
@@ -223,8 +228,9 @@ class CellStretcherApp:
                 self.data_logger_thread.close()
                 self.btn_save_to_file.config(text="Start Saving", bg="green")
                 self.currently_logging = False
-            except:
+            except Exception as e:
                 print("Error closing file!")
+                print(e)
         else:
             try:
                 self.file_name = filedialog.asksaveasfilename(defaultextension=".csv", filetypes=[("CSV files", "*.csv")])
@@ -232,33 +238,86 @@ class CellStretcherApp:
                     self.start_logger()
                     self.btn_save_to_file.config(text="Stop Saving", bg="red")
                     self.currently_logging = True
-            except:
+            except Exception as e:
                 print("Error opening file!")
+                print(e)
 
     # sending membrane parameters to the teensy
     def btn_set_parameters_click(self):
         # check if COM port connected
         if self.COM_connected:
-            command_byte = 3
-            max_steps = self.txt_membrane_size_mm.get() / self.lead_mm_per_rev *  self.motor_pulse_per_rev
-            strain_rate = 0
+            try:
 
-            data = max_steps.to_bytes(4, byteorder='big')
+                command = 3
+
+                # parse text inputs
+                target_steps = int(int(self.txt_membrane_size_mm.get()) * (int(self.txt_strain_target.get()) / 100) / self.lead_mm_per_rev *  self.motor_pulse_per_rev)
+                strain_rate = int(self.txt_strain_rate.get())
+
+                COM_message = self.create_message(command, target_steps, strain_rate)
+
+                self.send_serial(COM_message)
+            except Exception as e:
+                print("Problem sending parameters")
+                print(e)
+
+    # function to create byte packet with 1 start, 1 command, 4 data, 1 esc
+    def create_message(self, command, data1, data2) -> bytearray:
+        try:
+            start_byte = 255
+            start_byte = struct.pack('B', start_byte)       # Convert int into byte
+            
+            command_byte = struct.pack('B', command)       # Convert int into byte
+
+            if data1 >= 65535:
+                data1 = 65535
+            data1_bytes = struct.pack('>H', data1)        # Pack into byte
+            data1_bytes = bytearray(data1_bytes)
+
+            if data2 >= 65535:
+                data2 = 65535
+            data2_bytes = struct.pack('>H', data2)        # Pack into byte
+            data2_bytes = bytearray(data2_bytes)
+
+            # Handle if escape byte is necessary
+            esc_byte = 0
+
+            if data1_bytes[0] >= 255:
+                data1_bytes[0] = 0
+                print("data1[0] >= 255")
+                esc_byte |= 1 << 3
+            if data1_bytes[1] >= 255:
+                data1_bytes[1] = 0
+                print("data1[1] >= 255")
+                esc_byte |= 1 << 2
+            if data2_bytes[0] >= 255:
+                data2_bytes[0] = 0
+                print("data2[0] >= 255")
+                esc_byte |= 1 << 1
+            if data2_bytes[1] >= 255:
+                data2_bytes[1] = 0
+                print("data2[1] >= 255")
+                esc_byte |= 1 << 0
+
+            esc_byte = struct.pack('B', esc_byte)
+
+            message = start_byte + command_byte + data1_bytes + data2_bytes + esc_byte
+
+            return message
+        except Exception as e:
+            print("Problem creating message!")
+            print(e)
 
     # wrapper function to transmit data over serial
-    def send_serial(self, data):
+    def send_serial(self, COM_message):
         if self.COM_connected:
             try:
-                bytes_to_send = [255, ]
-
-            except:
+                self.serial_reader_thread.write_to_serial(COM_message)
+            except Exception as e:
                 print("Error writing over serial")
+                print(e)
 
     def close_program(self):
-        # self.load_cell_graph_thread.close()
-        # self.encoder_graph_thread.close()
-        # self.serial_reader_thread.close()
-        # self.data_logger_thread.close()
         self.master.destroy()
 
 if __name__ == "__main__":

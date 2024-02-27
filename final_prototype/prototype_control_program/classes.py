@@ -108,6 +108,7 @@ class SerialReaderThread(threading.Thread):
         self.counter = 0
         self.counter_delay = 2
 
+    # loop for opening, and continually reading serial port
     def run(self):
         # open serial port
         try:
@@ -158,8 +159,19 @@ class SerialReaderThread(threading.Thread):
                 else:
                     time.sleep(0.1)
 
-        except:
+        except Exception as e:
             print("Error opening serial port")
+            print(e)
+
+    # writing to serial port
+    def write_to_serial(self, COM_message):
+        if self.isOpen:
+            try:
+                self.serial_port.write(COM_message)     # write byte array to serial
+            except Exception as e:
+                print("Error writing to serial port!")
+                print(e)
+
 
     # returns if port is open
     def isOpen(self):
