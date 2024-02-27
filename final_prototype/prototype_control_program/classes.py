@@ -167,6 +167,7 @@ class SerialReaderThread(threading.Thread):
     def write_to_serial(self, COM_message):
         if self.isOpen:
             try:
+                print("Wrote " + str(COM_message) + " to serial port!")
                 self.serial_port.write(COM_message)     # write byte array to serial
             except Exception as e:
                 print("Error writing to serial port!")

@@ -14,11 +14,6 @@ import struct
 import csv
 import classes
 
-## files from classes go here
-
-##
-
-
 class CellStretcherApp:
     def __init__(self, master):
         self.master = master
@@ -47,6 +42,7 @@ class CellStretcherApp:
         # definte states
         self.currently_logging = False
         self.COM_connected = False
+        self.parameters_set = False
 
         # define widget cosmetics
         self.x_pad = 10
@@ -125,25 +121,25 @@ class CellStretcherApp:
         # create buttons
         self.btn_connect = tk.Button(root, text="Connect", command=self.btn_connect_click)
         self.btn_connect.grid(row=0, column=5, sticky="nsew")
-        self.btn_set_zero = tk.Button(root, text="Set Zero", command=lambda: self.button_click(1))
-        self.btn_set_zero.grid(row=1, column=1, columnspan=2, sticky="nsew")
-        self.btn_stop = tk.Button(root, text="STOP", command=lambda: self.button_click(1))
+        self.btn_home_axes = tk.Button(root, text="Set Zero", command=self.btn_home_axes_click)
+        self.btn_home_axes.grid(row=1, column=1, columnspan=2, sticky="nsew")
+        self.btn_stop = tk.Button(root, text="STOP", command=self.btn_stop_click)
         self.btn_stop.grid(row=2, column=1, rowspan=2, columnspan=2, sticky="nsew")
         self.btn_set_parameters = tk.Button(root, text="Set Parameters", command=self.btn_set_parameters_click)
         self.btn_set_parameters.grid(row=8, column=1, columnspan=5, sticky="nsew")
-        self.btn_move_to_zero = tk.Button(root, text="Move to 0", command=lambda: self.button_click(1))
+        self.btn_move_to_zero = tk.Button(root, text="Move to 0", command=self.btn_move_to_zero_click)
         self.btn_move_to_zero.grid(row=9, column=1, rowspan=2, columnspan=3, sticky="nsew")
-        self.btn_move_to_max = tk.Button(root, text="Move to Set Strain", command=lambda: self.button_click(1))
+        self.btn_move_to_max = tk.Button(root, text="Move to Set Strain", command=self.btn_move_to_max_click)
         self.btn_move_to_max.grid(row=9, column=4, rowspan=2, columnspan=2, sticky="nsew")
-        self.btn_start_cyclic_test = tk.Button(root, text="Start Cyclic Test", command=lambda: self.button_click(1))
+        self.btn_start_cyclic_test = tk.Button(root, text="Start Cyclic Test", command=self.btn_start_cyclic_test_click)
         self.btn_start_cyclic_test.grid(row=13, column=1, rowspan=2, columnspan=5, sticky="nsew")
         self.btn_save_to_file = tk.Button(root, text="Start Saving", bg="green", command=self.btn_save_to_file_click)
         self.btn_save_to_file.grid(row=15, column=3, columnspan=3, sticky="nsew")
 
         # create sliding scale, initialize to mid-point
-        self.scale = tk.Scale(root, from_=0, to=10, orient=tk.HORIZONTAL, command=self.on_scale_change)
-        self.scale.grid(row=2, column=3, rowspan=2, columnspan=3, sticky="nsew")
-        self.scale.set((self.scale['from'] + self.scale['to']) / 2)
+        self.scale_manual_movement = tk.Scale(root, from_=0, to=10, orient=tk.HORIZONTAL, command=self.manual_move_axes)
+        self.scale_manual_movement.grid(row=2, column=3, rowspan=2, columnspan=3, sticky="nsew")
+        self.scale_manual_movement.set((self.scale_manual_movement['from'] + self.scale_manual_movement['to']) / 2)
 
     # creates serial port reader
     def start_serial_reader(self):
@@ -194,8 +190,25 @@ class CellStretcherApp:
         print(f"Button {button_number} clicked!")
 
     # when manual movement scale is changed
-    def on_scale_change(self, value):
-        print("Scale Value: " + value)
+    def manual_move_axes(self, value):
+        try:
+            midpoint = (self.scale_manual_movement['from'] + self.scale_manual_movement['to']) / 2
+
+            if value == midpoint:
+                command = 7     # Stop axes
+            elif value > midpoint:
+                command = 1     # Move in positive direction
+                manual_speed = 0
+            elif value < midpoint:
+                command = 2     # Move in negative direction
+                manual_speed = 0
+
+            COM_message = self.create_message(command, manual_speed, 0)
+            self.send_serial(COM_message)
+
+        except Exception as e:
+            print("Problem manually moving axes!")
+            print(e)
 
     # when connect button clicked
     def btn_connect_click(self):
@@ -205,6 +218,7 @@ class CellStretcherApp:
                 self.serial_reader_thread.close()
                 self.btn_connect.config(text="Connect")
                 self.COM_connected = False
+                self.parameters_set = False
             except Exception as e:
                 print("Error closing serial port!")
                 print(e)
@@ -244,22 +258,70 @@ class CellStretcherApp:
 
     # sending membrane parameters to the teensy
     def btn_set_parameters_click(self):
-        # check if COM port connected
-        if self.COM_connected:
-            try:
+        try:
+            command = 3
 
-                command = 3
+            # parse text inputs
+            target_steps = int(int(self.txt_membrane_size_mm.get()) * (int(self.txt_strain_target.get()) / 100) / self.lead_mm_per_rev *  self.motor_pulse_per_rev)
+            strain_rate = int(self.txt_strain_rate.get())
 
-                # parse text inputs
-                target_steps = int(int(self.txt_membrane_size_mm.get()) * (int(self.txt_strain_target.get()) / 100) / self.lead_mm_per_rev *  self.motor_pulse_per_rev)
-                strain_rate = int(self.txt_strain_rate.get())
+            COM_message = self.create_message(command, target_steps, strain_rate)
+            self.send_serial(COM_message)
+            self.parameters_set = True
+        except Exception as e:
+            print("Problem sending parameters")
+            print(e)
 
-                COM_message = self.create_message(command, target_steps, strain_rate)
+    # Homing axes
+    def btn_home_axes_click(self):
+        try:
+            command = 0
+            COM_message = self.create_message(command, 0, 0)
+            self.send_serial(COM_message)
+        except Exception as e:
+            print("Problem homing axes!")
+            print(e)
 
-                self.send_serial(COM_message)
-            except Exception as e:
-                print("Problem sending parameters")
-                print(e)
+    # Stop device
+    def btn_stop_click(self):
+        try:
+            command = 7
+            COM_message = self.create_message(command, 0, 0)
+            self.send_serial(COM_message)
+        except Exception as e:
+            print("Problem stopping axes!")
+            print(e)
+
+    # Move axes to zero stretch
+    def btn_move_to_zero_click(self):
+        try:
+            command = 5
+            COM_message = self.create_message(command, 0, 0)
+            self.send_serial(COM_message)
+        except Exception as e:
+            print("Problem moving axes to zero!")
+            print(e)
+
+    # Move axes to max stretch
+    def btn_move_to_max_click(self):
+        try:
+            command = 4
+            COM_message = self.create_message(command, 0, 0)
+            self.send_serial(COM_message)
+        except Exception as e:
+            print("Problem moving axes to max stretch!")
+            print(e)
+
+    # Start cyclic stretching
+    def btn_start_cyclic_test_click(self):
+        try:
+            command = 6
+            stretch_cycles = str(self.txt_number_of_cycles.get())       # parse text inputs
+            COM_message = self.create_message(command, stretch_cycles, 0)
+            self.send_serial(COM_message)
+        except Exception as e:
+            print("Problem starting cyclic test!")
+            print(e)
 
     # function to create byte packet with 1 start, 1 command, 4 data, 1 esc
     def create_message(self, command, data1, data2) -> bytearray:
@@ -299,6 +361,8 @@ class CellStretcherApp:
                 print("data2[1] >= 255")
                 esc_byte |= 1 << 0
 
+            print("Parsed message as: 255, " + str(command) + ", " + str(data1) + ", " + str(data2) + ", " + str(esc_byte))
+
             esc_byte = struct.pack('B', esc_byte)
 
             message = start_byte + command_byte + data1_bytes + data2_bytes + esc_byte
@@ -316,7 +380,10 @@ class CellStretcherApp:
             except Exception as e:
                 print("Error writing over serial")
                 print(e)
+        else:
+            print("COM port closed!")
 
+    # Function run when window closed
     def close_program(self):
         self.master.destroy()
 
