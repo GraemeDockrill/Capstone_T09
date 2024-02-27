@@ -42,7 +42,7 @@ class RealTimeGraphThread(threading.Thread):
             self.line4, = self.ax.plot([], [], label='Line 4')
 
         # Add legend
-        self.ax.legend()
+        self.ax.legend(loc='upper right', bbox_to_anchor=(1, 1))
 
         # Create a canvas to display the plot
         self.canvas = FigureCanvasTkAgg(self.fig, master=self.master)
