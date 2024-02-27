@@ -47,7 +47,8 @@ class CellStretcherApp:
         # Define widget cosmetics
         self.x_pad = 10
         self.y_pad = 5
-        self.custom_font = ("Helvetica", 12, "bold")
+        self.custom_label_font = ("Helvetica", 12, "bold")
+        self.custom_button_font = ("Helvetica", 10, "bold")
 
         # Start up UI modules
         self.create_ui()
@@ -57,58 +58,55 @@ class CellStretcherApp:
     def create_ui(self):
         # Create COM Port drop down
         self.selected_port = tk.StringVar()
+        self.selected_port.set("Select a COM Port")
         self.port_dropdown = tk.OptionMenu(root, self.selected_port, "")
-        self.port_dropdown.grid(row=0, column=0, sticky="nsew", columnspan=2)
+        self.port_dropdown.grid(row=0, column=1, sticky="nsew", columnspan=3)
         self.refresh_ports()
         self.selected_port.trace_add('write', self.on_port_selected)
 
         # Create labels
-        self.lbl_baud = tk.Label(root, text="Baud:", font=self.custom_font, padx=self.x_pad, pady=self.y_pad)
-        self.lbl_baud.grid(row=0, column=3, sticky="nsew")
-        self.lbl_load_cell_graph = tk.Label(root, text="Loadcell Force", font=self.custom_font, padx=self.x_pad, pady=self.y_pad)
+        self.lbl_load_cell_graph = tk.Label(root, text="Loadcell Force", font=self.custom_label_font, padx=self.x_pad, pady=self.y_pad)
         self.lbl_load_cell_graph.grid(row=0, column=6, sticky="nsew")
-        self.lbl_manual_movement = tk.Label(root, text="Manual Movement", font=self.custom_font, padx=self.x_pad, pady=self.y_pad)
+        self.lbl_manual_movement = tk.Label(root, text="Manual Movement", font=self.custom_label_font, padx=self.x_pad, pady=self.y_pad)
         self.lbl_manual_movement.grid(row=1, column=3, columnspan=3, sticky="nsew")
-        self.lbl_membrane_parameters = tk.Label(root, text="Membrane Parameters", font=self.custom_font, padx=self.x_pad, pady=self.y_pad)
+        self.lbl_membrane_parameters = tk.Label(root, text="Membrane Parameters", font=self.custom_label_font, padx=self.x_pad, pady=self.y_pad)
         self.lbl_membrane_parameters.grid(row=4, column=1, columnspan=5, sticky="nsew")
-        self.lbl_membrane_size_mm = tk.Label(root, text="Membrane Size [mm]", font=self.custom_font, padx=self.x_pad, pady=self.y_pad)
+        self.lbl_membrane_size_mm = tk.Label(root, text="Membrane Size [mm]", font=self.custom_label_font, padx=self.x_pad, pady=self.y_pad)
         self.lbl_membrane_size_mm.grid(row=5, column=1, columnspan=3, sticky="nsew")
-        self.lbl_strain_target = tk.Label(root, text="Strain Target [%]", font=self.custom_font, padx=self.x_pad, pady=self.y_pad)
+        self.lbl_strain_target = tk.Label(root, text="Strain Target [%]", font=self.custom_label_font, padx=self.x_pad, pady=self.y_pad)
         self.lbl_strain_target.grid(row=6, column=1, columnspan=3, sticky="nsew")
-        self.lbl_strain_rate = tk.Label(root, text="Strain Rate [%/s]", font=self.custom_font, padx=self.x_pad, pady=self.y_pad)
+        self.lbl_strain_rate = tk.Label(root, text="Strain Rate [%/s]", font=self.custom_label_font, padx=self.x_pad, pady=self.y_pad)
         self.lbl_strain_rate.grid(row=7, column=1, columnspan=3, sticky="nsew")
-        self.lbl_cyclic_stretching = tk.Label(root, text="Cyclic Stretching", font=self.custom_font, padx=self.x_pad, pady=self.y_pad)
+        self.lbl_cyclic_stretching = tk.Label(root, text="Cyclic Stretching", font=self.custom_label_font, padx=self.x_pad, pady=self.y_pad)
         self.lbl_cyclic_stretching.grid(row=11, column=1, columnspan=5, sticky="nsew")
-        self.lbl_number_of_cycles = tk.Label(root, text="Number of Cycles", font=self.custom_font, padx=self.x_pad, pady=self.y_pad)
+        self.lbl_number_of_cycles = tk.Label(root, text="Number of Cycles", font=self.custom_label_font, padx=self.x_pad, pady=self.y_pad)
         self.lbl_number_of_cycles.grid(row=12, column=1, columnspan=3, sticky="nsew")
-        self.lbl_save_to_file = tk.Label(root, text="Save to File", font=self.custom_font, padx=self.x_pad, pady=self.y_pad)
+        self.lbl_save_to_file = tk.Label(root, text="Save to File", font=self.custom_label_font, padx=self.x_pad, pady=self.y_pad)
         self.lbl_save_to_file.grid(row=15, column=1, columnspan=2, sticky="nsew")
-        self.lbl_position_graph = tk.Label(root, text="Motor Position", font=self.custom_font, padx=self.x_pad, pady=self.y_pad)
+        self.lbl_position_graph = tk.Label(root, text="Motor Position", font=self.custom_label_font, padx=self.x_pad, pady=self.y_pad)
         self.lbl_position_graph.grid(row=8, column=6, sticky="nsew")
-        self.lbl_load_cell1_reading = tk.Label(root, text="Load Cell 1 [kg]", font=self.custom_font, padx=self.x_pad, pady=self.y_pad)
+        self.lbl_load_cell1_reading = tk.Label(root, text="Load Cell 1 [kg]", font=self.custom_label_font, padx=self.x_pad, pady=self.y_pad)
         self.lbl_load_cell1_reading.grid(row=1, column=7, sticky="nsew")
-        self.lbl_load_cell2_reading = tk.Label(root, text="Load Cell 2 [kg]", font=self.custom_font, padx=self.x_pad, pady=self.y_pad)
+        self.lbl_load_cell2_reading = tk.Label(root, text="Load Cell 2 [kg]", font=self.custom_label_font, padx=self.x_pad, pady=self.y_pad)
         self.lbl_load_cell2_reading.grid(row=4, column=7, sticky="nsew")
-        self.lbl_motor1_reading = tk.Label(root, text="Motor 1 Position [mm]", font=self.custom_font, padx=self.x_pad, pady=self.y_pad)
+        self.lbl_motor1_reading = tk.Label(root, text="Motor 1 Position [mm]", font=self.custom_label_font, padx=self.x_pad, pady=self.y_pad)
         self.lbl_motor1_reading.grid(row=9, column=7, sticky="nsew")
-        self.lbl_motor1_position = tk.Label(root, text="", font=self.custom_font, padx=self.x_pad, pady=self.y_pad)
+        self.lbl_motor1_position = tk.Label(root, text="", font=self.custom_label_font, padx=self.x_pad, pady=self.y_pad)
         self.lbl_motor1_position.grid(row=9, column=8, sticky="nsew")
-        self.lbl_motor2_reading = tk.Label(root, text="Motor 2 Position [mm]", font=self.custom_font, padx=self.x_pad, pady=self.y_pad)
+        self.lbl_motor2_reading = tk.Label(root, text="Motor 2 Position [mm]", font=self.custom_label_font, padx=self.x_pad, pady=self.y_pad)
         self.lbl_motor2_reading.grid(row=11, column=7, sticky="nsew")
-        self.lbl_motor2_position = tk.Label(root, text="", font=self.custom_font, padx=self.x_pad, pady=self.y_pad)
+        self.lbl_motor2_position = tk.Label(root, text="", font=self.custom_label_font, padx=self.x_pad, pady=self.y_pad)
         self.lbl_motor2_position.grid(row=11, column=8, sticky="nsew")
-        self.lbl_motor3_reading = tk.Label(root, text="Motor 3 Position [mm]", font=self.custom_font, padx=self.x_pad, pady=self.y_pad)
+        self.lbl_motor3_reading = tk.Label(root, text="Motor 3 Position [mm]", font=self.custom_label_font, padx=self.x_pad, pady=self.y_pad)
         self.lbl_motor3_reading.grid(row=13, column=7, sticky="nsew")
-        self.lbl_motor3_position = tk.Label(root, text="", font=self.custom_font, padx=self.x_pad, pady=self.y_pad)
+        self.lbl_motor3_position = tk.Label(root, text="", font=self.custom_label_font, padx=self.x_pad, pady=self.y_pad)
         self.lbl_motor3_position.grid(row=13, column=8, sticky="nsew")
-        self.lbl_motor4_reading = tk.Label(root, text="Motor 4 Position [mm]", font=self.custom_font, padx=self.x_pad, pady=self.y_pad)
+        self.lbl_motor4_reading = tk.Label(root, text="Motor 4 Position [mm]", font=self.custom_label_font, padx=self.x_pad, pady=self.y_pad)
         self.lbl_motor4_reading.grid(row=15, column=7, sticky="nsew")
-        self.lbl_motor4_position = tk.Label(root, text="", font=self.custom_font, padx=self.x_pad, pady=self.y_pad)
+        self.lbl_motor4_position = tk.Label(root, text="", font=self.custom_label_font, padx=self.x_pad, pady=self.y_pad)
         self.lbl_motor4_position.grid(row=15, column=8, sticky="nsew")
 
         # Create text entry
-        self.txt_baud = tk.Entry(root)
-        self.txt_baud.grid(row=0, column=4, sticky="nsew")
         self.txt_membrane_size_mm = tk.Entry(root)
         self.txt_membrane_size_mm.grid(row=5, column=4, columnspan=2, sticky="nsew")
         self.txt_strain_target = tk.Entry(root)
@@ -119,21 +117,21 @@ class CellStretcherApp:
         self.txt_number_of_cycles.grid(row=12, column=4, columnspan=2, sticky="nsew")
 
         # Create buttons
-        self.btn_connect = tk.Button(root, text="Connect", command=self.btn_connect_click)
-        self.btn_connect.grid(row=0, column=5, sticky="nsew")
-        self.btn_home_axes = tk.Button(root, text="Set Zero", command=self.btn_home_axes_click)
+        self.btn_connect = tk.Button(root, text="Connect", font=self.custom_button_font, command=self.btn_connect_click)
+        self.btn_connect.grid(row=0, column=4, columnspan=2, sticky="nsew")
+        self.btn_home_axes = tk.Button(root, text="Set Zero", font=self.custom_button_font, command=self.btn_home_axes_click)
         self.btn_home_axes.grid(row=1, column=1, columnspan=2, sticky="nsew")
-        self.btn_stop = tk.Button(root, text="STOP", command=self.btn_stop_click)
+        self.btn_stop = tk.Button(root, text="STOP", font=self.custom_button_font, command=self.btn_stop_click)
         self.btn_stop.grid(row=2, column=1, rowspan=2, columnspan=2, sticky="nsew")
-        self.btn_set_parameters = tk.Button(root, text="Set Parameters", command=self.btn_set_parameters_click)
+        self.btn_set_parameters = tk.Button(root, text="Set Parameters", font=self.custom_button_font, command=self.btn_set_parameters_click)
         self.btn_set_parameters.grid(row=8, column=1, columnspan=5, sticky="nsew")
-        self.btn_move_to_zero = tk.Button(root, text="Move to 0", command=self.btn_move_to_zero_click)
+        self.btn_move_to_zero = tk.Button(root, text="Move to 0", font=self.custom_button_font, command=self.btn_move_to_zero_click)
         self.btn_move_to_zero.grid(row=9, column=1, rowspan=2, columnspan=3, sticky="nsew")
-        self.btn_move_to_max = tk.Button(root, text="Move to Set Strain", command=self.btn_move_to_max_click)
+        self.btn_move_to_max = tk.Button(root, text="Move to Set Strain", font=self.custom_button_font, command=self.btn_move_to_max_click)
         self.btn_move_to_max.grid(row=9, column=4, rowspan=2, columnspan=2, sticky="nsew")
-        self.btn_start_cyclic_test = tk.Button(root, text="Start Cyclic Test", command=self.btn_start_cyclic_test_click)
+        self.btn_start_cyclic_test = tk.Button(root, text="Start Cyclic Test", font=self.custom_button_font, command=self.btn_start_cyclic_test_click)
         self.btn_start_cyclic_test.grid(row=13, column=1, rowspan=2, columnspan=5, sticky="nsew")
-        self.btn_save_to_file = tk.Button(root, text="Start Saving", bg="green", command=self.btn_save_to_file_click)
+        self.btn_save_to_file = tk.Button(root, text="Start Saving", bg="green", font=self.custom_button_font, command=self.btn_save_to_file_click)
         self.btn_save_to_file.grid(row=15, column=3, columnspan=3, sticky="nsew")
 
         # Create sliding scale, initialize to mid-point
@@ -218,6 +216,7 @@ class CellStretcherApp:
         # First check if we're already connected
         if self.COM_connected:
             try:
+                self.btn_save_to_file_click()
                 self.serial_port_thread.close()
                 self.btn_connect.config(text="Connect")
                 self.COM_connected = False
@@ -239,25 +238,29 @@ class CellStretcherApp:
 
     # Called when save to file button clicked
     def btn_save_to_file_click(self):
-        # First check if currently logging data
-        if self.currently_logging:
-            try:
-                self.data_logger_thread.close()
-                self.btn_save_to_file.config(text="Start Saving", bg="green")
-                self.currently_logging = False
-            except Exception as e:
-                print("Error closing file!")
-                print(e)
+        # First check if COM connected
+        if self.COM_connected:
+            # Then check if currently logging data
+            if self.currently_logging:
+                try:
+                    self.data_logger_thread.close()
+                    self.btn_save_to_file.config(text="Start Saving", bg="green")
+                    self.currently_logging = False
+                except Exception as e:
+                    print("Error closing file!")
+                    print(e)
+            else:
+                try:
+                    self.file_name = filedialog.asksaveasfilename(defaultextension=".csv", filetypes=[("CSV files", "*.csv")])
+                    if self.file_name:
+                        self.start_logger()
+                        self.btn_save_to_file.config(text="Stop Saving", bg="red")
+                        self.currently_logging = True
+                except Exception as e:
+                    print("Error opening file!")
+                    print(e)
         else:
-            try:
-                self.file_name = filedialog.asksaveasfilename(defaultextension=".csv", filetypes=[("CSV files", "*.csv")])
-                if self.file_name:
-                    self.start_logger()
-                    self.btn_save_to_file.config(text="Stop Saving", bg="red")
-                    self.currently_logging = True
-            except Exception as e:
-                print("Error opening file!")
-                print(e)
+            print("COM port not open!")
 
     # Sending membrane parameters to the teensy
     def btn_set_parameters_click(self):
