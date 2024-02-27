@@ -216,7 +216,6 @@ class CellStretcherApp:
         # First check if we're already connected
         if self.COM_connected:
             try:
-                self.btn_save_to_file_click()
                 self.serial_port_thread.close()
                 self.btn_connect.config(text="Connect")
                 self.COM_connected = False
@@ -238,29 +237,25 @@ class CellStretcherApp:
 
     # Called when save to file button clicked
     def btn_save_to_file_click(self):
-        # First check if COM connected
-        if self.COM_connected:
-            # Then check if currently logging data
-            if self.currently_logging:
-                try:
-                    self.data_logger_thread.close()
-                    self.btn_save_to_file.config(text="Start Saving", bg="green")
-                    self.currently_logging = False
-                except Exception as e:
-                    print("Error closing file!")
-                    print(e)
-            else:
-                try:
-                    self.file_name = filedialog.asksaveasfilename(defaultextension=".csv", filetypes=[("CSV files", "*.csv")])
-                    if self.file_name:
-                        self.start_logger()
-                        self.btn_save_to_file.config(text="Stop Saving", bg="red")
-                        self.currently_logging = True
-                except Exception as e:
-                    print("Error opening file!")
-                    print(e)
+        # First check if currently logging data
+        if self.currently_logging:
+            try:
+                self.data_logger_thread.close()
+                self.btn_save_to_file.config(text="Start Saving", bg="green")
+                self.currently_logging = False
+            except Exception as e:
+                print("Error closing file!")
+                print(e)
         else:
-            print("COM port not open!")
+            try:
+                self.file_name = filedialog.asksaveasfilename(defaultextension=".csv", filetypes=[("CSV files", "*.csv")])
+                if self.file_name:
+                    self.start_logger()
+                    self.btn_save_to_file.config(text="Stop Saving", bg="red")
+                    self.currently_logging = True
+            except Exception as e:
+                print("Error opening file!")
+                print(e)
 
     # Sending membrane parameters to the teensy
     def btn_set_parameters_click(self):
