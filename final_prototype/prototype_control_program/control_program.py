@@ -1,5 +1,5 @@
-# control program for MECH45X cell stretcher capstone
-# written by Graeme Dockrill - 2024
+# Control program for MECH45X cell stretcher capstone
+# Written by Graeme Dockrill - 2024
 
 import tkinter as tk
 from tkinter import filedialog
@@ -18,12 +18,12 @@ class CellStretcherApp:
     def __init__(self, master):
         self.master = master
 
-        # define the serial port, baudrate and packet size
+        # Define the serial port, baudrate and packet size
         self.serial_port = "COM6"
         self.baudrate = 480000000
         self.packet_size = 22
 
-        # device parameters
+        # Device parameters
         self.lead_mm_per_rev = 5
         self.motor_pulse_per_rev = 800
         self.encoder_pulse_per_rev = 1000
@@ -31,38 +31,38 @@ class CellStretcherApp:
         self.max_strain_target = 100        # placeholder value
         self.max_strain_rate = 100          # Placeholder value
 
-        # define default file name
+        # Define default file name
         self.file_name = "testfile.csv"
 
-        # create shared queues for load cell, encoder and logger data
+        # Create shared queues for load cell, encoder and logger data
         self.load_cell_queue = queue.Queue()
         self.encoder_queue = queue.Queue()
         self.logger_queue = queue.Queue()
 
-        # definte states
+        # Define states
         self.currently_logging = False
         self.COM_connected = False
         self.parameters_set = False
 
-        # define widget cosmetics
+        # Define widget cosmetics
         self.x_pad = 10
         self.y_pad = 5
         self.custom_font = ("Helvetica", 12, "bold")
 
-        # start up UI modules
+        # Start up UI modules
         self.create_ui()
         self.start_graphs()
         
-    # called on start up to create UI
+    # Called on start up to create UI
     def create_ui(self):
-        # create COM Port drop down
+        # Create COM Port drop down
         self.selected_port = tk.StringVar()
         self.port_dropdown = tk.OptionMenu(root, self.selected_port, "")
         self.port_dropdown.grid(row=0, column=0, sticky="nsew", columnspan=2)
         self.refresh_ports()
         self.selected_port.trace_add('write', self.on_port_selected)
 
-        # create labels
+        # Create labels
         self.lbl_baud = tk.Label(root, text="Baud:", font=self.custom_font, padx=self.x_pad, pady=self.y_pad)
         self.lbl_baud.grid(row=0, column=3, sticky="nsew")
         self.lbl_load_cell_graph = tk.Label(root, text="Loadcell Force", font=self.custom_font, padx=self.x_pad, pady=self.y_pad)
@@ -106,7 +106,7 @@ class CellStretcherApp:
         self.lbl_motor4_position = tk.Label(root, text="", font=self.custom_font, padx=self.x_pad, pady=self.y_pad)
         self.lbl_motor4_position.grid(row=15, column=8, sticky="nsew")
 
-        # create text entry
+        # Create text entry
         self.txt_baud = tk.Entry(root)
         self.txt_baud.grid(row=0, column=4, sticky="nsew")
         self.txt_membrane_size_mm = tk.Entry(root)
@@ -118,7 +118,7 @@ class CellStretcherApp:
         self.txt_number_of_cycles = tk.Entry(root)
         self.txt_number_of_cycles.grid(row=12, column=4, columnspan=2, sticky="nsew")
 
-        # create buttons
+        # Create buttons
         self.btn_connect = tk.Button(root, text="Connect", command=self.btn_connect_click)
         self.btn_connect.grid(row=0, column=5, sticky="nsew")
         self.btn_home_axes = tk.Button(root, text="Set Zero", command=self.btn_home_axes_click)
@@ -136,24 +136,24 @@ class CellStretcherApp:
         self.btn_save_to_file = tk.Button(root, text="Start Saving", bg="green", command=self.btn_save_to_file_click)
         self.btn_save_to_file.grid(row=15, column=3, columnspan=3, sticky="nsew")
 
-        # create sliding scale, initialize to mid-point
+        # Create sliding scale, initialize to mid-point
         self.scale_manual_movement = tk.Scale(root, from_=0, to=10, orient=tk.HORIZONTAL, command=self.manual_move_axes)
         self.scale_manual_movement.grid(row=2, column=3, rowspan=2, columnspan=3, sticky="nsew")
         self.scale_manual_movement.set((self.scale_manual_movement['from'] + self.scale_manual_movement['to']) / 2)
 
-    # creates serial port reader
+    # Creates serial port reader
     def start_serial_reader(self):
-        # create and start the serial reader thread
-        self.serial_reader_thread = classes.SerialReaderThread(self.serial_port, self.baudrate, 
+        # Create and start the serial reader thread
+        self.serial_port_thread = classes.SerialPortThread(self.serial_port, self.baudrate, 
                                                 self.packet_size, self.load_cell_queue, 
                                                 self.encoder_queue, self.logger_queue)
-        self.serial_reader_thread.name = "serial_reader_thread"
-        self.serial_reader_thread.daemon = True
-        self.serial_reader_thread.start()
+        self.serial_port_thread.name = "serial_reader_thread"
+        self.serial_port_thread.daemon = True
+        self.serial_port_thread.start()
 
-    # creates graphs
+    # Creates graphs
     def start_graphs(self):
-        # create and start two instances of real time graph thread
+        # Create and start two instances of real time graph thread
         self.load_cell_graph_thread = classes.RealTimeGraphThread(root, self.load_cell_queue, 2)
         self.load_cell_graph_thread.name = "load_cell_graph_thread"
         self.load_cell_graph_thread.daemon = True
@@ -164,15 +164,15 @@ class CellStretcherApp:
         self.encoder_graph_thread.daemon = True
         self.encoder_graph_thread.start()
 
-    # starts logging data
+    # Starts logging data
     def start_logger(self):
-        # create logger thread
+        # Create logger thread
         self.data_logger_thread = classes.DataLoggerThread(self.file_name, self.logger_queue)
         self.data_logger_thread.name = "data_logger_thread"
         self.data_logger_thread.daemon = True
         self.data_logger_thread.start()
     
-    # refreshes available COM ports
+    # Refreshes available COM ports
     def refresh_ports(self, event=None):
         # Get a list of available COM ports
         ports = [port.device for port in list_ports.comports()]
@@ -181,21 +181,23 @@ class CellStretcherApp:
         for port in ports:
             self.port_dropdown['menu'].add_command(label=port, command=tk._setit(self.selected_port, port))
 
-    # event on port being selected
+    # Event on port being selected
     def on_port_selected(self, *args):
         print("Selected port:", self.selected_port.get())
 
-    # generic button click event
+    # Generic button click event
     def button_click(self, button_number):
         print(f"Button {button_number} clicked!")
 
-    # when manual movement scale is changed
+    # When manual movement scale is changed
     def manual_move_axes(self, value):
         try:
-            midpoint = (self.scale_manual_movement['from'] + self.scale_manual_movement['to']) / 2
+            midpoint = int((self.scale_manual_movement['from'] + self.scale_manual_movement['to']) / 2)
+            value = int(value)
 
             if value == midpoint:
                 command = 7     # Stop axes
+                manual_speed = 0
             elif value > midpoint:
                 command = 1     # Move in positive direction
                 manual_speed = 0
@@ -203,19 +205,20 @@ class CellStretcherApp:
                 command = 2     # Move in negative direction
                 manual_speed = 0
 
-            COM_message = self.create_message(command, manual_speed, 0)
-            self.send_serial(COM_message)
+            if self.COM_connected:
+                COM_message = self.create_message(command, manual_speed, 0)
+                self.send_serial(COM_message)
 
         except Exception as e:
             print("Problem manually moving axes!")
             print(e)
 
-    # when connect button clicked
+    # When connect button clicked
     def btn_connect_click(self):
-        # first check if we're already connected
+        # First check if we're already connected
         if self.COM_connected:
             try:
-                self.serial_reader_thread.close()
+                self.serial_port_thread.close()
                 self.btn_connect.config(text="Connect")
                 self.COM_connected = False
                 self.parameters_set = False
@@ -227,16 +230,16 @@ class CellStretcherApp:
                 self.serial_port = self.selected_port.get()
                 self.start_serial_reader()
                 time.sleep(0.1)
-                if self.serial_reader_thread.isOpen():
+                if self.serial_port_thread.isOpen():
                     self.btn_connect.config(text="Disconnect")
                     self.COM_connected = True
             except Exception as e:
                 print("Error opening serial port!")
                 print(e)
 
-    # called when save to file button clicked
+    # Called when save to file button clicked
     def btn_save_to_file_click(self):
-        # first check if currently logging data
+        # First check if currently logging data
         if self.currently_logging:
             try:
                 self.data_logger_thread.close()
@@ -256,12 +259,12 @@ class CellStretcherApp:
                 print("Error opening file!")
                 print(e)
 
-    # sending membrane parameters to the teensy
+    # Sending membrane parameters to the teensy
     def btn_set_parameters_click(self):
         try:
             command = 3
 
-            # parse text inputs
+            # Parse text inputs
             target_steps = int(int(self.txt_membrane_size_mm.get()) * (int(self.txt_strain_target.get()) / 100) / self.lead_mm_per_rev *  self.motor_pulse_per_rev)
             strain_rate = int(self.txt_strain_rate.get())
 
@@ -316,14 +319,14 @@ class CellStretcherApp:
     def btn_start_cyclic_test_click(self):
         try:
             command = 6
-            stretch_cycles = str(self.txt_number_of_cycles.get())       # parse text inputs
+            stretch_cycles = str(self.txt_number_of_cycles.get())       # Parse text inputs
             COM_message = self.create_message(command, stretch_cycles, 0)
             self.send_serial(COM_message)
         except Exception as e:
             print("Problem starting cyclic test!")
             print(e)
 
-    # function to create byte packet with 1 start, 1 command, 4 data, 1 esc
+    # Function to create byte packet with 1 start, 1 command, 4 data, 1 esc
     def create_message(self, command, data1, data2) -> bytearray:
         try:
             start_byte = 255
@@ -372,11 +375,11 @@ class CellStretcherApp:
             print("Problem creating message!")
             print(e)
 
-    # wrapper function to transmit data over serial
+    # Wrapper function to transmit data over serial
     def send_serial(self, COM_message):
         if self.COM_connected:
             try:
-                self.serial_reader_thread.write_to_serial(COM_message)
+                self.serial_port_thread.write_to_serial(COM_message)
             except Exception as e:
                 print("Error writing over serial")
                 print(e)
@@ -388,13 +391,13 @@ class CellStretcherApp:
         self.master.destroy()
 
 if __name__ == "__main__":
-    # initialize tkinter root
+    # Initialize tkinter root
     root = tk.Tk()
     root.title("Prototype Control Program")
 
-    # create app
+    # Create app
     app = CellStretcherApp(root)
 
-    # handle closing the window
+    # Handle closing the window
     root.protocol("WM_DELETE_WINDOW", app.close_program)
     root.mainloop()
