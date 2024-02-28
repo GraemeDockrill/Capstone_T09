@@ -9,6 +9,15 @@
 #define LOAD_CELL1_DATA_PIN 28
 #define LOAD_CELL2_DATA_PIN 41
 
+#define ENC1_A 2
+#define ENC1_B 3
+#define ENC2_A 4
+#define ENC2_B 5
+#define ENC3_A 6
+#define ENC3_B 7
+#define ENC4_A 8
+#define ENC4_B 9
+
 
 // struct for message to be added to serial task queue
 struct QueueMessage{
@@ -66,6 +75,11 @@ int ESCByte = 0;        // for sending over UART
 int load_cell1_rdy = 0;
 int load_cell2_rdy = 0;
 static boolean load_cell_data_rdy = false;
+
+long enc1_pos = 0;
+long enc2_pos = 0;
+long enc3_pos = 0;
+long enc4_pos = 0;
 
 class CircularBuffer{
 public:

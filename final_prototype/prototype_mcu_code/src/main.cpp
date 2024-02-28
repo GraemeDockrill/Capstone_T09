@@ -4,6 +4,7 @@
 #include <Arduino.h>
 #include <FreeRTOS_TEENSY4.h>
 #include <HX711_ADC.h>
+#include <Encoder.h>
 #include <defines.h>
 #include <math.h>
 
@@ -15,6 +16,12 @@ CircularBuffer serial_buffer;
 // create HX711 objects
 HX711_ADC load_cell1(LOAD_CELL1_DATA_PIN, LOAD_CELL1_SCK_PIN);
 HX711_ADC load_cell2(LOAD_CELL2_DATA_PIN, LOAD_CELL2_SCK_PIN);
+
+// create encoder objects
+Encoder encoder1(ENC1_A, ENC1_B);
+Encoder encoder2(ENC2_A, ENC2_B);
+Encoder encoder3(ENC3_A, ENC3_B);
+Encoder encoder4(ENC4_A, ENC4_B);
 
 // global variables
 float x = 0;
@@ -37,44 +44,58 @@ static void LoggingDataReadThread(void* arg){
 
     if(load_cell_data_rdy){
 
-      // read load cell 1
+      // read load cells
       float load_cell1_data = load_cell1.getData();
-
-      // read load cell 2
       float load_cell2_data = load_cell2.getData();
 
-      // read encoder 1
+      // read encoders
+      short enc1_data = (short) encoder1.read();
+      short enc2_data = (short) encoder2.read();
+      short enc3_data = (short) encoder3.read();
+      short enc4_data = (short) encoder4.read();
 
-      // read encoder 2
+      // take empty buffer semaphore
+      xSemaphoreTake(empty, portMAX_DELAY);
 
-      // read encoder 3
+      // create and add message to queue
+      queue_message.time_stamp = (int) millis();
+      queue_message.data1 = load_cell1_data;
+      queue_message.data2 = load_cell2_data;
+      queue_message.data3 = enc1_data;
+      queue_message.data4 = enc2_data;
+      queue_message.data5 = enc3_data;
+      queue_message.data6 = enc4_data;
 
-      // read encoder 4
+      // enqueue message for serial thread
+      xQueueSend(queue, (void *) &queue_message, 0);
+
+      // return new full buffer semaphore
+      xSemaphoreGive(full);
 
     }
 
-    y3 = computeY1(x);
-    y2 = computeY2(x);
+    // y3 = computeY1(x);
+    // y2 = computeY2(x);
 
-    // take empty buffer semaphore
-    xSemaphoreTake(empty, portMAX_DELAY);
+    // // take empty buffer semaphore
+    // xSemaphoreTake(empty, portMAX_DELAY);
 
-    // add data to message queue struct
-    queue_message.time_stamp = (int) millis();
-    queue_message.data1 = y3;
-    queue_message.data2 = y2;
-    queue_message.data3 = computeEncoderTest(x);
-    queue_message.data4 = computeEncoderTest(x);
-    queue_message.data5 = computeEncoderTest(x);
-    queue_message.data6 = computeEncoderTest(x);
+    // // add data to message queue struct
+    // queue_message.time_stamp = (int) millis();
+    // queue_message.data1 = y3;
+    // queue_message.data2 = y2;
+    // queue_message.data3 = computeEncoderTest(x);
+    // queue_message.data4 = computeEncoderTest(x);
+    // queue_message.data5 = computeEncoderTest(x);
+    // queue_message.data6 = computeEncoderTest(x);
 
-    // enqueue message for serial thread
-    xQueueSend(queue, (void *) &queue_message, 0);
+    // // enqueue message for serial thread
+    // xQueueSend(queue, (void *) &queue_message, 0);
 
-    // return new full buffer semaphore
-    xSemaphoreGive(full);
+    // // return new full buffer semaphore
+    // xSemaphoreGive(full);
 
-    x += 0.1;
+    // x += 0.1;
 
     // Sleep for 100 milliseconds.
     vTaskDelay((100L * configTICK_RATE_HZ) / 1000L);
