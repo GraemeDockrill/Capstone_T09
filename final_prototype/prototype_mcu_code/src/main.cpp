@@ -1,5 +1,9 @@
+// Firmware for MECH45X cell stretcher capstone
+// Written by Graeme Dockrill - 2024
+
 #include <Arduino.h>
 #include <FreeRTOS_TEENSY4.h>
+#include <HX711_ADC.h>
 #include <defines.h>
 #include <math.h>
 
@@ -8,6 +12,11 @@ SemaphoreHandle_t mutex, empty, full;
 QueueHandle_t queue;
 CircularBuffer serial_buffer;
 
+// create HX711 objects
+HX711_ADC load_cell1(LOAD_CELL1_DATA_PIN, LOAD_CELL1_SCK_PIN);
+HX711_ADC load_cell2(LOAD_CELL2_DATA_PIN, LOAD_CELL2_SCK_PIN);
+
+// global variables
 float x = 0;
 float y3;
 float y2;
@@ -23,17 +32,26 @@ short computeEncoderTest(float x);
 static void LoggingDataReadThread(void* arg){
   while(1){
 
-    // Serial.println("Thread 1: Waiting on Thread 2 to turn LED ON");
+    if(load_cell1.update() & load_cell2.update())
+      load_cell_data_rdy = true;
 
-    // // Wait for signal from thread 2.
-    // xSemaphoreTake(mutex, portMAX_DELAY);
+    if(load_cell_data_rdy){
 
-    // Serial.println("Thread 1: Turning LED OFF");
+      // read load cell 1
+      float load_cell1_data = load_cell1.getData();
 
-    // // Turn LED off.
-    // digitalWrite(LED_BUILTIN, LOW);
+      // read load cell 2
+      float load_cell2_data = load_cell2.getData();
 
-    //Serial.println("thread 1 computing y = x*x");
+      // read encoder 1
+
+      // read encoder 2
+
+      // read encoder 3
+
+      // read encoder 4
+
+    }
 
     y3 = computeY1(x);
     y2 = computeY2(x);
@@ -41,6 +59,7 @@ static void LoggingDataReadThread(void* arg){
     // take empty buffer semaphore
     xSemaphoreTake(empty, portMAX_DELAY);
 
+    // add data to message queue struct
     queue_message.time_stamp = (int) millis();
     queue_message.data1 = y3;
     queue_message.data2 = y2;
@@ -49,7 +68,7 @@ static void LoggingDataReadThread(void* arg){
     queue_message.data5 = computeEncoderTest(x);
     queue_message.data6 = computeEncoderTest(x);
 
-    //Serial.println("thread 1 enqueing");
+    // enqueue message for serial thread
     xQueueSend(queue, (void *) &queue_message, 0);
 
     // return new full buffer semaphore
@@ -67,7 +86,7 @@ static void LoggingDataReadThread(void* arg){
 // takes any full buffer spots and sends data over UART
 static void SerialThread(void* arg){
   
-  pinMode(LED_BUILTIN, OUTPUT);
+  // pinMode(LED_BUILTIN, OUTPUT);
 
   while(1){
     // check if byte waiting in serial
@@ -140,7 +159,19 @@ void setup() {
   // initialize circular buffer
   serial_buffer.createCircularBuffer(BUFFER_MAX_LENGTH);
 
-  // pinMode(LED_BUILTIN, OUTPUT);
+  // initialize load cells
+  load_cell1.begin();
+  load_cell2.begin();
+
+  // startup, stabilization, and tare each module at the same time
+  while(load_cell1_rdy + load_cell2_rdy < 2){
+    if(!load_cell1_rdy) load_cell1_rdy = load_cell1.startMultiple(LOAD_CELL_STABILIZATION_TIME_MS, LOAD_CELL_TARE);
+    if(!load_cell2_rdy) load_cell2_rdy = load_cell2.startMultiple(LOAD_CELL_STABILIZATION_TIME_MS, LOAD_CELL_TARE);
+  }
+
+  // calibrate load cells
+  load_cell1.setCalFactor(LOAD_CELL1_CALIBRATION_FACTOR);
+  load_cell2.setCalFactor(LOAD_CELL2_CALIBRATION_FACTOR);
 
   Serial.begin(9600);
 

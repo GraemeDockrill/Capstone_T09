@@ -3,6 +3,13 @@
 #ifndef header_h
 #define header_h
 
+// pin definitions
+#define LOAD_CELL1_SCK_PIN 27
+#define LOAD_CELL2_SCK_PIN 13
+#define LOAD_CELL1_DATA_PIN 28
+#define LOAD_CELL2_DATA_PIN 41
+
+
 // struct for message to be added to serial task queue
 struct QueueMessage{
     int time_stamp;
@@ -51,6 +58,14 @@ int ESCByte = 0;        // for sending over UART
 #define QUEUE_MAX_LENGTH 100
 #define BUFFER_MAX_LENGTH 100
 #define RECEIVE_MSG_SIZE 7
+#define LOAD_CELL_STABILIZATION_TIME_MS 2000
+#define LOAD_CELL_TARE true
+#define LOAD_CELL1_CALIBRATION_FACTOR 1000
+#define LOAD_CELL2_CALIBRATION_FACTOR 1000
+
+int load_cell1_rdy = 0;
+int load_cell2_rdy = 0;
+static boolean load_cell_data_rdy = false;
 
 class CircularBuffer{
 public:
