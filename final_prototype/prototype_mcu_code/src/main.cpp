@@ -14,11 +14,12 @@ float y2;
 // declare functions for computing y from given x value
 float computeY1 (float x);
 float computeY2 (float x);
+short computeEncoderTest(float x);
 
 
 // declare thread function for thread 1
 // computes y = x*x every 100 ms and adds it to buffer
-static void Thread1(void* arg){
+static void LoggingDataReadThread(void* arg){
   while(1){
 
     // Serial.println("Thread 1: Waiting on Thread 2 to turn LED ON");
@@ -43,11 +44,16 @@ static void Thread1(void* arg){
     //Serial.println("thread 1 taking mutex");
     xSemaphoreTake(mutex, portMAX_DELAY);
 
-    num.x = y3;
-    num.y = y2;
+    queue_message.time_stamp = (int) millis();
+    queue_message.data1 = y3;
+    queue_message.data2 = y2;
+    queue_message.data3 = computeEncoderTest(x);
+    queue_message.data4 = computeEncoderTest(x);
+    queue_message.data5 = computeEncoderTest(x);
+    queue_message.data6 = computeEncoderTest(x);
 
     //Serial.println("thread 1 enqueing");
-    xQueueSend(queue, (void *) &num, 0);
+    xQueueSend(queue, (void *) &queue_message, 0);
 
     //Serial.println("thread 1 releasing mutex");
     xSemaphoreGive(mutex);
@@ -66,27 +72,11 @@ static void Thread1(void* arg){
 
 // declare thread function for thread 2
 // takes any full buffer spots and sends data over UART
-static void Thread2(void* arg){
+static void SerialThread(void* arg){
   
   pinMode(LED_BUILTIN, OUTPUT);
 
   while(1){
-
-    // // Turn LED on.
-    // digitalWrite(LED_BUILTIN, HIGH);
-
-    // Serial.println("Thread 2: Turining LED ON");
-
-    // // Sleep for 200 milliseconds.
-    // vTaskDelay((200L * configTICK_RATE_HZ) / 1000L);
-
-    // Serial.println("Thread 2: Asking Thread 1 to turn LED OFF");
-
-    // // Signal thread 1 to turn LED off.
-    // xSemaphoreGive(mutex);
-
-    // // Sleep for 200 milliseconds.
-    // vTaskDelay((200L * configTICK_RATE_HZ) / 1000L);
 
     //Serial.println("thread 2 taking full buffer");
     xSemaphoreTake(full, portMAX_DELAY);
@@ -96,21 +86,13 @@ static void Thread2(void* arg){
 
     //Serial.println("thread 2 dequeing");
     // remove message from queue
-    xQueueReceive(queue, (void *) &message.temp_long, portMAX_DELAY);
-
-    timestamp.temp_int = (int) millis();
+    xQueueReceive(queue, (void *) &COM_message.parsed_message, portMAX_DELAY);
 
     //Serial.println("thread 2 sending UART");
     // send message over UART
     Serial.write(255);
-    for(int i = 0; i < 4; i++){
-      Serial.write(timestamp.temp_byte[i]);       // write time stamp bytes
-    }
-    for(int i = 0; i < 8; i++){
-      Serial.write(message.temp_byte[i]);         // write load cell bytes
-    }
-    for(int i = 0; i < 8; i++){
-      Serial.write(0);                            // write encoder padding bytes
+    for(int i = 0; i < 20; i++){
+      Serial.write(COM_message.temp_byte[i]);         // write data bytes
     }
     Serial.write(ESCByte);
 
@@ -138,13 +120,13 @@ void setup() {
   full = xSemaphoreCreateCounting(QUEUE_MAX_LENGTH, 0);
   empty = xSemaphoreCreateCounting(QUEUE_MAX_LENGTH, QUEUE_MAX_LENGTH);
 
-  queue = xQueueCreate(QUEUE_MAX_LENGTH, 8);
+  queue = xQueueCreate(QUEUE_MAX_LENGTH, 20);
 
   // create task at priority two
-  s1 = xTaskCreate(Thread1, NULL, configMINIMAL_STACK_SIZE, NULL, 2, NULL);
+  s1 = xTaskCreate(LoggingDataReadThread, NULL, configMINIMAL_STACK_SIZE, NULL, 2, NULL);
 
   // create task at priority one
-  s2 = xTaskCreate(Thread2, NULL, configMINIMAL_STACK_SIZE, NULL, 1, NULL);
+  s2 = xTaskCreate(SerialThread, NULL, configMINIMAL_STACK_SIZE, NULL, 1, NULL);
 
   // check for creation errors
   if(mutex==NULL || s1 != pdPASS || s2 != pdPASS){
@@ -171,4 +153,8 @@ float computeY1 (float x){
 
 float computeY2 (float x){
   return cos(x);
+}
+
+short computeEncoderTest(float x){
+  return (short) rand()*x;
 }

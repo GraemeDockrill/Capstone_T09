@@ -3,21 +3,22 @@
 #ifndef header_h
 #define header_h
 
+// struct for message to be added to serial task queue
+struct QueueMessage{
+    int time_stamp;
+    float data1;
+    float data2;
+    short data3;
+    short data4;
+    short data5;
+    short data6;
+} queue_message;
+
 // define union for UART message
 union u_message {
-   long temp_long ; 
-   byte temp_byte[8] ;
-} message;
-
-union u_timestamp {
-    int temp_int ;
-    byte temp_byte[4] ;
-} timestamp;
-
-struct number{
-    float x;
-    float y;
-} num;
+   struct QueueMessage parsed_message ; 
+   byte temp_byte[20] ;
+} COM_message;
 
 // define bit constants
 int BIT0 = 0x0001;
