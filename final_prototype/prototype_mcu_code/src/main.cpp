@@ -6,6 +6,7 @@
 // create semaphore handle
 SemaphoreHandle_t mutex, empty, full;
 QueueHandle_t queue;
+CircularBuffer serial_buffer;
 
 float x = 0;
 float y3;
@@ -37,12 +38,8 @@ static void LoggingDataReadThread(void* arg){
     y3 = computeY1(x);
     y2 = computeY2(x);
 
-    //Serial.println("thread 1 taking empty buffer");
     // take empty buffer semaphore
     xSemaphoreTake(empty, portMAX_DELAY);
-
-    //Serial.println("thread 1 taking mutex");
-    xSemaphoreTake(mutex, portMAX_DELAY);
 
     queue_message.time_stamp = (int) millis();
     queue_message.data1 = y3;
@@ -55,10 +52,6 @@ static void LoggingDataReadThread(void* arg){
     //Serial.println("thread 1 enqueing");
     xQueueSend(queue, (void *) &queue_message, 0);
 
-    //Serial.println("thread 1 releasing mutex");
-    xSemaphoreGive(mutex);
-
-    //Serial.println("thread 1 releasing give");
     // return new full buffer semaphore
     xSemaphoreGive(full);
 
@@ -77,31 +70,64 @@ static void SerialThread(void* arg){
   pinMode(LED_BUILTIN, OUTPUT);
 
   while(1){
-
-    //Serial.println("thread 2 taking full buffer");
-    xSemaphoreTake(full, portMAX_DELAY);
-
-    //Serial.println("thread 2 taking mutex");
-    xSemaphoreTake(mutex, portMAX_DELAY);
-
-    //Serial.println("thread 2 dequeing");
-    // remove message from queue
-    xQueueReceive(queue, (void *) &COM_message.parsed_message, portMAX_DELAY);
-
-    //Serial.println("thread 2 sending UART");
-    // send message over UART
-    Serial.write(255);
-    for(int i = 0; i < 20; i++){
-      Serial.write(COM_message.temp_byte[i]);         // write data bytes
+    // check if byte waiting in serial
+    if(Serial.available() > 0){
+      serial_buffer.enqueue(Serial.read());     // enqueue received byte
     }
-    Serial.write(ESCByte);
+    // if length of buffer is long enough for a message
+    if(serial_buffer.queueCount() >= RECEIVE_MSG_SIZE){
+      // dequeue received bytes
+      start_byte = serial_buffer.dequeue();
+      cmd_byte0 = serial_buffer.dequeue();
+      data_byte0 = serial_buffer.dequeue();
+      data_byte1 = serial_buffer.dequeue();
+      data_byte2 = serial_buffer.dequeue();
+      data_byte3 = serial_buffer.dequeue();
+      esc_byte = serial_buffer.dequeue();
 
-    //Serial.println("thread 2 releasing mutex");
-    xSemaphoreGive(mutex);
+      // if switching back using esc_byte
+      if(esc_byte & BIT3)
+        data_byte0 = 255;
+      if(esc_byte & BIT2)
+        data_byte1 = 255;
+      if(esc_byte & BIT1)
+        data_byte2 = 255;
+      if(esc_byte & BIT0)
+        data_byte3 = 255;
 
-    //Serial.println("thread 2 releasing empty");
-    // signal a new queue spot has opened
-    xSemaphoreGive(empty);
+      // combining bytes back together
+      data_int0 = data_byte0 << 8;
+      data_int0 = data_int0 + data_byte1;
+      data_int1 = data_byte2 << 8;
+      data_int1 + data_int1 + data_byte3;
+
+      // if start byte is valid
+      if(start_byte == 255){
+
+        // parse data_int0 and data_int1 according to cmd_byte0
+
+      }
+    }
+    // check if there is something in the send queue
+    if(uxQueueMessagesWaiting(queue) > 0){
+
+      // signal full spot is removed
+      xSemaphoreTake(full, portMAX_DELAY);
+
+      // remove message from queue
+      xQueueReceive(queue, (void *) &COM_message.parsed_message, portMAX_DELAY);
+
+      // send message over UART
+      Serial.write(255);
+      for(int i = 0; i < 20; i++){
+        Serial.write(COM_message.temp_byte[i]);         // write data bytes
+      }
+      Serial.write(ESCByte);
+
+      // signal a new queue spot has opened
+      xSemaphoreGive(empty);
+
+    }
 
   }
 }
@@ -110,6 +136,9 @@ void setup() {
   // put your setup code here, to run once:
 
   portBASE_TYPE s1, s2;
+
+  // initialize circular buffer
+  serial_buffer.createCircularBuffer(BUFFER_MAX_LENGTH);
 
   // pinMode(LED_BUILTIN, OUTPUT);
 
