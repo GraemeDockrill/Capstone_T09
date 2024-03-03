@@ -5,12 +5,13 @@
 #include <FreeRTOS_TEENSY4.h>
 #include <HX711_ADC.h>
 #include <Encoder.h>
+#include <AccelStepper.h>
 #include <defines.h>
 #include <math.h>
 
 // create semaphore handle
-SemaphoreHandle_t mutex, empty, full;
-QueueHandle_t queue;
+SemaphoreHandle_t motor_mutex, empty, full;
+QueueHandle_t data_logger_queue;
 CircularBuffer serial_buffer;
 
 // create HX711 objects
@@ -23,6 +24,12 @@ Encoder encoder2(ENC2_A, ENC2_B);
 Encoder encoder3(ENC3_A, ENC3_B);
 Encoder encoder4(ENC4_A, ENC4_B);
 
+// create motor objects
+AccelStepper stepper1(AccelStepper::DRIVER, MOT1_PUL, MOT1_DIR);
+AccelStepper stepper2(AccelStepper::DRIVER, MOT2_PUL, MOT2_DIR);
+AccelStepper stepper3(AccelStepper::DRIVER, MOT3_PUL, MOT3_DIR);
+AccelStepper stepper4(AccelStepper::DRIVER, MOT4_PUL, MOT4_DIR);
+
 // global variables
 float x = 0;
 float y3;
@@ -32,7 +39,6 @@ float y2;
 float computeY1 (float x);
 float computeY2 (float x);
 short computeEncoderTest(float x);
-
 
 // declare thread function for thread 1
 // computes y = x*x every 100 ms and adds it to buffer
@@ -67,7 +73,7 @@ static void LoggingDataReadThread(void* arg){
       queue_message.data6 = enc4_data;
 
       // enqueue message for serial thread
-      xQueueSend(queue, (void *) &queue_message, 0);
+      xQueueSend(data_logger_queue, (void *) &queue_message, 0);
 
       // return new full buffer semaphore
       xSemaphoreGive(full);
@@ -149,13 +155,13 @@ static void SerialThread(void* arg){
       }
     }
     // check if there is something in the send queue
-    if(uxQueueMessagesWaiting(queue) > 0){
+    if(uxQueueMessagesWaiting(data_logger_queue) > 0){
 
       // signal full spot is removed
       xSemaphoreTake(full, portMAX_DELAY);
 
       // remove message from queue
-      xQueueReceive(queue, (void *) &COM_message.parsed_message, portMAX_DELAY);
+      xQueueReceive(data_logger_queue, (void *) &COM_message.parsed_message, portMAX_DELAY);
 
       // send message over UART
       Serial.write(255);
@@ -172,10 +178,30 @@ static void SerialThread(void* arg){
   }
 }
 
+// declare thread for function for controlling the motors
+// continually running control loop for the 4 motors
+static void MotorControlThread(void* arg){
+  while(1){
+    // take mutex for updating motor target
+    xSemaphoreTake(motor_mutex, portMAX_DELAY);
+
+    // check new move command
+
+    // return mutex
+    xSemaphoreGive(motor_mutex);
+
+    stepper1.run();
+    stepper2.run();
+    stepper3.run();
+    stepper4.run();
+
+  }
+}
+
 void setup() {
   // put your setup code here, to run once:
 
-  portBASE_TYPE s1, s2;
+  portBASE_TYPE s1, s2, s3;
 
   // initialize circular buffer
   serial_buffer.createCircularBuffer(BUFFER_MAX_LENGTH);
@@ -194,14 +220,24 @@ void setup() {
   load_cell1.setCalFactor(LOAD_CELL1_CALIBRATION_FACTOR);
   load_cell2.setCalFactor(LOAD_CELL2_CALIBRATION_FACTOR);
 
+  // set motor parameters
+  stepper1.setAcceleration(100);
+  stepper1.setMaxSpeed(200);
+  stepper2.setAcceleration(100);
+  stepper2.setMaxSpeed(200);
+  stepper3.setAcceleration(100);
+  stepper3.setMaxSpeed(200);
+  stepper4.setAcceleration(100);
+  stepper4.setMaxSpeed(200);
+
   Serial.begin(9600);
 
   // create semaphores for thread safe queue
-  mutex = xSemaphoreCreateCounting(1,1);
+  motor_mutex = xSemaphoreCreateCounting(1,1);
   full = xSemaphoreCreateCounting(QUEUE_MAX_LENGTH, 0);
   empty = xSemaphoreCreateCounting(QUEUE_MAX_LENGTH, QUEUE_MAX_LENGTH);
 
-  queue = xQueueCreate(QUEUE_MAX_LENGTH, 20);
+  data_logger_queue = xQueueCreate(QUEUE_MAX_LENGTH, 20);
 
   // create task at priority two
   s1 = xTaskCreate(LoggingDataReadThread, NULL, configMINIMAL_STACK_SIZE, NULL, 2, NULL);
@@ -209,8 +245,11 @@ void setup() {
   // create task at priority one
   s2 = xTaskCreate(SerialThread, NULL, configMINIMAL_STACK_SIZE, NULL, 1, NULL);
 
+  // create task at priority two
+  s3 = xTaskCreate(MotorControlThread, NULL, configMINIMAL_STACK_SIZE, NULL, 2, NULL);
+
   // check for creation errors
-  if(mutex==NULL || s1 != pdPASS || s2 != pdPASS){
+  if(motor_mutex==NULL || s1 != pdPASS || s2 != pdPASS || s3 != pdPASS){
     Serial.println("Creation problem");
     while(1);
   }

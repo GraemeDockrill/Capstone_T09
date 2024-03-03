@@ -18,6 +18,15 @@
 #define ENC4_A 8
 #define ENC4_B 9
 
+#define MOT1_PUL 23
+#define MOT1_DIR 22
+#define MOT2_PUL 21
+#define MOT2_DIR 20
+#define MOT3_PUL 19
+#define MOT3_DIR 18
+#define MOT4_PUL 17
+#define MOT4_DIR 16
+
 
 // struct for message to be added to serial task queue
 struct QueueMessage{
@@ -75,6 +84,7 @@ int ESCByte = 0;        // for sending over UART
 int load_cell1_rdy = 0;
 int load_cell2_rdy = 0;
 static boolean load_cell_data_rdy = false;
+int cyclic_stretching = 0;
 
 long enc1_pos = 0;
 long enc2_pos = 0;
