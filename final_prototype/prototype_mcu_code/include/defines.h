@@ -1,4 +1,6 @@
-
+// defines.h header file for MECH45X cell stretcher capstone
+// declares variables that will be used across the program
+// Written by Graeme Dockrill - 2024
 
 #ifndef defines_h
 #define defines_h

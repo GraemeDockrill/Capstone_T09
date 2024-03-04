@@ -1,4 +1,5 @@
-
+// motorControl.h header file for MECH45X cell stretcher capstone
+// Written by Graeme Dockrill - 2024
 
 #ifndef motorControl_h
 #define motorControl_h

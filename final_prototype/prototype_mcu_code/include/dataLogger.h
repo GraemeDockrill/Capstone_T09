@@ -1,4 +1,5 @@
-
+// dataLogger.h for MECH45X cell stretcher capstone
+// Written by Graeme Dockrill - 2024
 
 #ifndef dataLogger_h
 #define dataLogger_h

@@ -1,3 +1,6 @@
+// motorControl.cpp header file for MECH45X cell stretcher capstone
+// deals with the control of the 4 stepper motors of the device
+// Written by Graeme Dockrill - 2024
 
 #include <motorControl.h>
 
@@ -12,6 +15,7 @@ int auto_control = 0;
 
 int min_stretch_steps = 0;
 int max_stretch_steps = 0;
+int target_steps = 0;
 
 int target_cycles = 0;
 int current_cycles = 0;

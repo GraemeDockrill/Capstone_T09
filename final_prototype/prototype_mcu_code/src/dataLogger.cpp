@@ -1,4 +1,6 @@
-
+// dataLogger.cpp for MECH45X cell stretcher capstone
+// deals with reading load cells and encoders then packaging to send over UART
+// Written by Graeme Dockrill - 2024
 
 #include <dataLogger.h>
 

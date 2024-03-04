@@ -1,4 +1,5 @@
-
+// serialCommunicator.h for MECH45X cell stretcher capstone
+// Written by Graeme Dockrill - 2024
 
 #ifndef serialCommunicator_h
 #define serialCommunicator_h

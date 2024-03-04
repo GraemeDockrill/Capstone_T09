@@ -1,4 +1,6 @@
-
+// serialCommunicator.cpp for MECH45X cell stretcher capstone
+// deals with communication between PC and MCU and between tasks
+// Written by Graeme Dockrill - 2024
 
 #include <serialCommunicator.h>
 
@@ -9,7 +11,7 @@ int data_byte0;
 int data_byte1;
 int data_byte2;
 int data_byte3;
-int esc_byte;
+int esc_byte;           // for receiving over UART
 
 // declare combined UART data bytes
 int data_int0;
