@@ -32,7 +32,7 @@ CircularBuffer serial_buffer;
 
 void SerialThread(void* arg){
   
-  // pinMode(LED_BUILTIN, OUTPUT);
+  pinMode(LED_BUILTIN, OUTPUT);
 
   while(1){
     // check if byte waiting in serial
@@ -72,7 +72,35 @@ void SerialThread(void* arg){
       if(start_byte == 255){
 
         // parse data_int0 and data_int1 according to cmd_byte0
-
+        switch(cmd_byte0){
+          case HOME_AXES:         // cmd_byte0 = 0
+            digitalWrite(LED_BUILTIN, HIGH);
+          break;
+          case MANUAL_POS_MOVE:   // cmd_byte0 = 1
+            setManualMotorSpeeds(data_int0);
+          break;
+          case MANUAL_NEG_MOVE:   // cmd_byte0 = 2
+            setManualMotorSpeeds(-data_int0);
+          break;
+          case SET_PARAMETERS:    // cmd_byte0 = 3
+            setMotorParameters(data_int0, data_int1);
+          break;
+          case STRETCH_TO_MAX:    // cmd_byte0 = 4
+            setMotorTargets (max_stretch_steps);
+          break;
+          case RETURN_TO_ZERO:    // cmd_byte0 = 5
+            setMotorTargets (min_stretch_steps);
+          break;
+          case CYCLIC_STRETCHING: // cmd_byte0 = 6
+            startCyclicStretching(data_int0);
+          break;
+          case STOP:              // cmd_byte0 = 7
+            digitalWrite(LED_BUILTIN, LOW);
+            stopMotors();
+          break;
+          default:
+          break;
+        }
       }
     }
     // check if there is something in the send queue

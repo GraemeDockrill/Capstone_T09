@@ -12,7 +12,7 @@
 #include <serialCommunicator.h>
 #include <motorControl.h>
 
-// create HX711 objects
+// declare HX711 objects
 extern HX711_ADC load_cell1;
 extern HX711_ADC load_cell2;
 

@@ -13,7 +13,7 @@
 #include <dataLogger.h>
 #include <motorControl.h>
 
-// create semaphore handle
+// declare semaphore handles
 extern SemaphoreHandle_t motor_mutex, empty, full;
 
 // declare queue
@@ -32,9 +32,20 @@ struct LoggerQueueMessage{
 
 // define union for UART message
 union u_serial_message {
-   struct LoggerQueueMessage parsed_message ; 
-   byte temp_byte[20] ;
+    struct LoggerQueueMessage parsed_message ; 
+    byte temp_byte[20] ;
 } extern COM_message;
+
+enum incoming_message{
+    HOME_AXES,
+    MANUAL_POS_MOVE,
+    MANUAL_NEG_MOVE,
+    SET_PARAMETERS,
+    STRETCH_TO_MAX,
+    RETURN_TO_ZERO,
+    CYCLIC_STRETCHING,
+    STOP
+};
 
 // declare thread function for thread 2
 // takes any full buffer spots and sends data over UART

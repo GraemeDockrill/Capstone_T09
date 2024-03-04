@@ -30,6 +30,7 @@ class CellStretcherApp:
         self.max_steps = 65535              # placeholder value
         self.max_strain_target = 100        # placeholder value
         self.max_strain_rate = 100          # Placeholder value
+        self.max_steps_per_sec = 250
 
         # Define default file name
         self.file_name = "testfile.csv"
@@ -205,11 +206,15 @@ class CellStretcherApp:
                 command = 7     # Stop axes
                 manual_speed = 0
             elif value > midpoint:
+                slope = (self.max_steps_per_sec - (-self.max_steps_per_sec)) / (self.scale_manual_movement['to'] - self.scale_manual_movement['from'])
+                y_intercept = -self.max_steps_per_sec
                 command = 1     # Move in positive direction
-                manual_speed = 0
+                manual_speed = int(slope * value + y_intercept)
             elif value < midpoint:
+                slope = (-self.max_steps_per_sec - self.max_steps_per_sec) / int(self.scale_manual_movement['to'] - self.scale_manual_movement['from'])
+                y_intercept = self.max_steps_per_sec
                 command = 2     # Move in negative direction
-                manual_speed = 0
+                manual_speed = int(slope * value + y_intercept)
 
             if self.COM_connected:
                 COM_message = self.create_message(command, manual_speed, 0)
@@ -294,9 +299,17 @@ class CellStretcherApp:
     # Stop device
     def btn_stop_click(self):
         try:
-            command = 7
-            COM_message = self.create_message(command, 0, 0)
-            self.send_serial(COM_message)
+            midpoint = int((self.scale_manual_movement['from'] + self.scale_manual_movement['to']) / 2)
+
+            #  if scale already at midpoint, just send cmd_byte = 7
+            if(int(self.scale_manual_movement.get()) == midpoint):
+                command = 7
+                COM_message = self.create_message(command, 0, 0)
+                self.send_serial(COM_message)
+            else:
+                # just reset the slider value to the middle
+                self.scale_manual_movement.set((self.scale_manual_movement['from'] + self.scale_manual_movement['to']) / 2)
+            
         except Exception as e:
             print("Problem stopping axes!")
             print(e)
@@ -325,7 +338,7 @@ class CellStretcherApp:
     def btn_start_cyclic_test_click(self):
         try:
             command = 6
-            stretch_cycles = str(self.txt_number_of_cycles.get())       # Parse text inputs
+            stretch_cycles = int(self.txt_number_of_cycles.get())       # Parse text inputs
             COM_message = self.create_message(command, stretch_cycles, 0)
             self.send_serial(COM_message)
         except Exception as e:

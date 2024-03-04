@@ -31,4 +31,19 @@ void MotorControlThread(void* arg);
 // initialize motors with parameters
 void initializeMotors(void);
 
+// set motor speeds for manual movement
+void setManualMotorSpeeds(int speed);
+
+// stop motors
+void stopMotors(void);
+
+// start cyclic stretching test
+void startCyclicStretching(int cycles);
+
+// sets all motor targets
+void setMotorTargets (int target);
+
+// sets all motor parameters
+void setMotorParameters(int start_steps, int speed);
+
 #endif

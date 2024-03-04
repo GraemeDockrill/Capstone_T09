@@ -3,12 +3,13 @@
 #ifndef defines_h
 #define defines_h
 
-// pin definitions
+// load cell pins
 #define LOAD_CELL1_SCK_PIN 27
 #define LOAD_CELL2_SCK_PIN 13
 #define LOAD_CELL1_DATA_PIN 28
 #define LOAD_CELL2_DATA_PIN 41
 
+// encoder pins
 #define ENC1_A 2
 #define ENC1_B 3
 #define ENC2_A 4
@@ -18,6 +19,7 @@
 #define ENC4_A 8
 #define ENC4_B 9
 
+// motor driver pins
 #define MOT1_PUL 23
 #define MOT1_DIR 22
 #define MOT2_PUL 21
@@ -65,11 +67,23 @@ extern int ESCByte;        // for sending over UART
 
 #define MOTOR_MAX_SPEED 200     // steps per second
 #define MOTOR_MAX_ACCELERATION 100      // steps per second per second
+#define MOTOR_PPR 800
+#define ENCODER_PPR 1000
+#define LEAD_SCREW_PITCH 5      // mm / rev
 
 extern int load_cell1_rdy;
 extern int load_cell2_rdy;
 extern int load_cell_data_rdy;
 extern int cyclic_stretching;
+extern int manual_control;
+extern int auto_control;
+
+extern int target_cycles;
+extern int current_cycles;
+
+extern int target_steps;
+extern int min_stretch_steps;
+extern int max_stretch_steps;
 
 extern long enc1_pos;
 extern long enc2_pos;

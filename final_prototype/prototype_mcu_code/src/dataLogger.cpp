@@ -6,6 +6,7 @@ int load_cell1_rdy = 0;
 int load_cell2_rdy = 0;
 int load_cell_data_rdy = 0;
 
+// define load cell objects
 HX711_ADC load_cell1(LOAD_CELL1_DATA_PIN, LOAD_CELL1_SCK_PIN);
 HX711_ADC load_cell2(LOAD_CELL2_DATA_PIN, LOAD_CELL2_SCK_PIN);
 
