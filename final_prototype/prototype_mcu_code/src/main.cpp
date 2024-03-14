@@ -16,6 +16,8 @@ float y2;
 void setup() {
   // put your setup code here, to run once:
 
+  PIT_TFLG0 = 1;
+
   portBASE_TYPE s1, s2, s3;
 
   // initialize circular buffer

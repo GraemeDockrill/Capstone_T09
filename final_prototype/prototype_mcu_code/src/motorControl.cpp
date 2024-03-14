@@ -161,3 +161,31 @@ void setMotorParameters(int start_steps, int speed){
   // return motor mutex
   xSemaphoreGive(motor_mutex);
 }
+
+void motorInterruptInit(void){
+
+  /* TMR0_CTRL: CM=0,PCS=0,SCS=0,ONCE=0,LENGTH=1,DIR=0,COINIT=0,OUTMODE=0 */
+  TMR1_CTRL0 = TMR_CTRL_LENGTH; /* Stop all functions of the timer */
+  /* TMR0_SCTRL: TCF=0,TCFIE=0,TOF=0,TOFIE=0,IEF=0,IEFIE=0,IPS=0,INPUT=0,
+  Capture_Mode=0,MSTR=0,EEOF=0,VAL=0,FORCE=0,OPS=0,OEN=0 */
+  TMR1_SCTRL0 = 0x0;
+  TMR1_LOAD0 = 0x0; /* Reset load register */
+  TMR1_COMP10 = 46874; /* Set up compare 1 register */
+  TMR1_CMPLD10 = 46874; /* Also set the compare preload register */
+  /* TMR0_CSCTRL: DBG_EN=0,FAULT=0,ALT_LOAD=0,ROC=0,TCI=0,UP=0,OFLAG=0,TCF2EN=0,TCF1EN=1,
+  TCF2=0,TCF1=0,CL2=0,CL1=1 */
+  TMR1_CSCTRL0 = TMR_CSCTRL_TCF1EN + TMR_CSCTRL_CL1(0b01); /* Enable compare 1 interrupt and */
+  /* compare 1 preload */
+  TMR1_CTRL0 &= TMR_CTRL_PCS(0b1111); /* Primary Count Source to IP_bus_clk / 128 */
+  TMR1_CNTR0 = 0x00; /* Reset counter register */
+  TMR1_CTRL0 &= TMR_CTRL_CM(0b001); /* Run counter */
+
+}
+
+void motor1_QTIMER1_ISR(void){
+  // if stepSpeed counter interrupt
+  if(TMR1_SCTRL0 & TMR_CSCTRL_TCF1){
+    
+  }
+
+}

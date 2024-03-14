@@ -5,6 +5,9 @@
 #ifndef defines_h
 #define defines_h
 
+// header file for hardware register defines
+#include "imxrt.h"
+
 // load cell pins
 #define LOAD_CELL1_SCK_PIN 27
 #define LOAD_CELL2_SCK_PIN 13
