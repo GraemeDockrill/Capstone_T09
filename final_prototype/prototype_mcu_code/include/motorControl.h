@@ -25,6 +25,12 @@ extern Encoder encoder2;
 extern Encoder encoder3;
 extern Encoder encoder4;
 
+// declaring struct for motor parameters
+typedef struct {
+   IMXRT_TMR_t timer_reg;
+   IRQ_NUMBER_t irq_vector;
+} motorParams_t;
+
 // declare thread for function for controlling the motors
 // continually running control loop for the 4 motors
 void MotorControlThread(void* arg);
@@ -46,5 +52,33 @@ void setMotorTargets (int target);
 
 // sets all motor parameters
 void setMotorParameters(int start_steps, int speed);
+
+// // ISR for motor1 control using QTIMER1
+// void motor1_QTIMER1_ISR(void);
+
+class motor{
+public:
+    motorParams_t motorParams;
+    Encoder* encoder_ptr;
+
+    // initialize motor timer operation
+    motor(motorParams_t inputMotorParams, Encoder* input_encoder_ptr){
+        motorParams = inputMotorParams;
+        encoder_ptr = input_encoder_ptr;
+        motorInterruptInit();
+    }
+
+    void motorInterruptInit(void);
+
+    void motorEnable(bool enable);
+
+    // ISR for motor1 control using QTIMER1
+    static void motor1_QTIMER1_ISR(void);
+
+
+private:
+
+
+};
 
 #endif

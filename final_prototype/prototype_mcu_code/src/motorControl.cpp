@@ -162,30 +162,203 @@ void setMotorParameters(int start_steps, int speed){
   xSemaphoreGive(motor_mutex);
 }
 
-void motorInterruptInit(void){
+// void motorInterruptInit(void){
 
-  /* TMR0_CTRL: CM=0,PCS=0,SCS=0,ONCE=0,LENGTH=1,DIR=0,COINIT=0,OUTMODE=0 */
-  TMR1_CTRL0 = TMR_CTRL_LENGTH; /* Stop all functions of the timer */
-  /* TMR0_SCTRL: TCF=0,TCFIE=0,TOF=0,TOFIE=0,IEF=0,IEFIE=0,IPS=0,INPUT=0,
-  Capture_Mode=0,MSTR=0,EEOF=0,VAL=0,FORCE=0,OPS=0,OEN=0 */
-  TMR1_SCTRL0 = 0x0;
-  TMR1_LOAD0 = 0x0; /* Reset load register */
-  TMR1_COMP10 = 46874; /* Set up compare 1 register */
-  TMR1_CMPLD10 = 46874; /* Also set the compare preload register */
-  /* TMR0_CSCTRL: DBG_EN=0,FAULT=0,ALT_LOAD=0,ROC=0,TCI=0,UP=0,OFLAG=0,TCF2EN=0,TCF1EN=1,
-  TCF2=0,TCF1=0,CL2=0,CL1=1 */
-  TMR1_CSCTRL0 = TMR_CSCTRL_TCF1EN + TMR_CSCTRL_CL1(0b01); /* Enable compare 1 interrupt and */
-  /* compare 1 preload */
-  TMR1_CTRL0 &= TMR_CTRL_PCS(0b1111); /* Primary Count Source to IP_bus_clk / 128 */
-  TMR1_CNTR0 = 0x00; /* Reset counter register */
-  TMR1_CTRL0 &= TMR_CTRL_CM(0b001); /* Run counter */
+  // /* TMR0_CTRL: CM=0,PCS=0,SCS=0,ONCE=0,LENGTH=1,DIR=0,COINIT=0,OUTMODE=0 */
+  // TMR1_CTRL0 = TMR_CTRL_LENGTH; /* Stop all functions of the timer */
+  // /* TMR0_SCTRL: TCF=0,TCFIE=0,TOF=0,TOFIE=0,IEF=0,IEFIE=0,IPS=0,INPUT=0,
+  // Capture_Mode=0,MSTR=0,EEOF=0,VAL=0,FORCE=0,OPS=0,OEN=0 */
+  // TMR1_SCTRL0 = 0x0;
+  // TMR1_LOAD0 = 0x0; /* Reset load register */
+  // TMR1_COMP10 = 46874; /* Set up compare 1 register */
+  // TMR1_CMPLD10 = 46874; /* Also set the compare preload register */
+  // /* TMR0_CSCTRL: DBG_EN=0,FAULT=0,ALT_LOAD=0,ROC=0,TCI=0,UP=0,OFLAG=0,TCF2EN=0,TCF1EN=1,
+  // TCF2=0,TCF1=0,CL2=0,CL1=1 */
+  // TMR1_CSCTRL0 = TMR_CSCTRL_TCF1EN + TMR_CSCTRL_CL1(0b01); /* Enable compare 1 interrupt and */
+  // attachInterruptVector(IRQ_QTIMER4, motor1_QTIMER1_ISR);
+  // /* compare 1 preload */
+  // TMR1_CTRL0 &= TMR_CTRL_PCS(0b1111); /* Primary Count Source to IP_bus_clk / 128 */
+  // TMR1_CNTR0 = 0x00; /* Reset counter register */
+  // TMR1_CTRL0 &= TMR_CTRL_CM(0b001); /* Run counter */
+
+// }
+
+void motor::motorInterruptInit(void){
+
+  // set up timer operation of channel 0 and 1
+  for (int i = 0; i <= 1; i++){
+    motorParams.timer_reg.CH[i].CTRL = 0; // stop TMR1 CH0
+    motorParams.timer_reg.CH[i].SCTRL = 0x0;
+    motorParams.timer_reg.CH[i].LOAD = 0x0; // initial value
+    motorParams.timer_reg.CH[i].COMP1 = 0x0F00; // count to this value
+    motorParams.timer_reg.CH[i].CMPLD1 = 0x0F00; // start from this value after compare
+    motorParams.timer_reg.CH[i].CTRL |= TMR_CTRL_PCS(0b1111); // clock prescaler of 128
+    motorParams.timer_reg.CH[i].CTRL |= TMR_CTRL_LENGTH; // count until compare, then reload from CMPLD10
+    attachInterruptVector(IRQ_QTIMER1, motor1_QTIMER1_ISR);  // attach interrupt vector to ISR
+    motorParams.timer_reg.CH[i].CSCTRL |= TMR_CSCTRL_CL1(0b01);
+    motorParams.timer_reg.CH[i].CSCTRL &= ~(TMR_CSCTRL_TCF1); // clear interrupt flag
+    motorParams.timer_reg.CH[i].CSCTRL |= TMR_CSCTRL_TCF1EN; // enable COMP1 interrupt
+    motorParams.timer_reg.CH[i].CNTR = 0; // reset counter value to 0
+    // motorParams.timer_reg.CH[i].CTRL &= TMR_CTRL_CM(0b001); // run counter    
+  }
+
+  // enable interrupt from timer peripheral
+  NVIC_ENABLE_IRQ(motorParams.irq_vector);
 
 }
 
-void motor1_QTIMER1_ISR(void){
-  // if stepSpeed counter interrupt
+void motor::motorEnable(bool enable){
+  motorParams.timer_reg.CH[0].CNTR = 0; // reset counter value to 0
+  motorParams.timer_reg.CH[1].CNTR = 0; // reset counter value to 0
+  motorParams.timer_reg.CH[0].CTRL &= TMR_CTRL_CM(enable); // run counter
+  motorParams.timer_reg.CH[1].CTRL &= TMR_CTRL_CM(enable); // run counter
+}
+
+// void motor1_QTIMER1_ISR(void){
+
+//   // read encoder1 position (used in stepSpeed & acceleration)
+//   motor1Pos = encoder1.read();
+
+//   // if stepSpeed counter interrupt (TMR1_timer0)
+//   if(TMR1_SCTRL0 & TMR_CSCTRL_TCF1){
+    
+//     // if below the target
+//     if(motor1Pos < motor1Target){
+//       // +step motor
+//     }
+//     // if above the target
+//     else if(motor1Pos > motor1Target){
+//       // -step motor
+//     }
+//     else{
+//       // do nothing
+//     }
+
+//   }
+
+//   // if acceleration counter interrupt (TMR1_timer1)
+//   if(TMR1_SCTRL1 & TMR_CSCTRL_TCF1){
+    
+//     // if motor1 moving in +ve direction
+//     if(motor1DIR == 1){
+
+//       // if in acceleration phase
+//       if(motor1Pos < motor1AccPos){
+//         // speed up motor
+//       }
+//       // if in constant speed phase
+//       else if(motor1Pos < motor1ConstSpdPos){
+//         // do nothing
+//       }
+//       // if in constant deceleration phase
+//       else if(motor1Pos < motor1DecPos){
+//         // slow down motor
+//       }
+//       else{
+//         // do nothing
+//       }
+
+//     }
+//     // if motor1 moving in -ve direction
+//     else if(motor1DIR == 0){
+
+//       // if in constant acceleration phase
+//       if(motor1Pos > motor1AccPos){
+//         // speed up motor
+//       }
+//       // if in constant speed phase
+//       else if(motor1Pos > motor1ConstSpdPos){
+//         // do nothing
+//       }
+//       else if(motor1Pos > motor1DecPos){
+//         // slow down motor
+//       }
+//       else{
+//         // do nothing
+//       }
+
+//     }
+
+//   }
+
+
+// }
+
+void motor::motor1_QTIMER1_ISR(void){
+
+  // read encoder1 position (used in stepSpeed & acceleration)
+  motor1Pos = *encoder_ptr.read();
+
+  // if stepSpeed counter interrupt (TMR1_timer0)
   if(TMR1_SCTRL0 & TMR_CSCTRL_TCF1){
     
+    // if below the target
+    if(motor1Pos < motor1Target){
+      // +step motor
+    }
+    // if above the target
+    else if(motor1Pos > motor1Target){
+      // -step motor
+    }
+    else{
+      // do nothing
+    }
+
+    // clear stepping interrupt flag
+    motorParams.timer_reg.CH[0].CSCTRL &= ~(TMR_CSCTRL_TCF1);
+
   }
+
+  // if acceleration counter interrupt (TMR1_timer1)
+  if(TMR1_SCTRL1 & TMR_CSCTRL_TCF1){
+    
+    // if motor1 moving in +ve direction
+    if(motor1DIR == 1){
+
+      // if in acceleration phase
+      if(motor1Pos < motor1AccPos){
+        // speed up motor
+      }
+      // if in constant speed phase
+      else if(motor1Pos < motor1ConstSpdPos){
+        // do nothing
+      }
+      // if in constant deceleration phase
+      else if(motor1Pos < motor1DecPos){
+        // slow down motor
+      }
+      else{
+        // do nothing
+      }
+
+    }
+    // if motor1 moving in -ve direction
+    else if(motor1DIR == 0){
+
+      // if in constant acceleration phase
+      if(motor1Pos > motor1AccPos){
+        // speed up motor
+      }
+      // if in constant speed phase
+      else if(motor1Pos > motor1ConstSpdPos){
+        // do nothing
+      }
+      else if(motor1Pos > motor1DecPos){
+        // slow down motor
+      }
+      else{
+        // do nothing
+      }
+
+    }
+
+    // disable acceleration interrupt flag
+    motorParams.timer_reg.CH[1].CSCTRL &= ~(TMR_CSCTRL_TCF1);
+
+  }
+
+  
+
+  __asm volatile ("dsb"); 
 
 }
