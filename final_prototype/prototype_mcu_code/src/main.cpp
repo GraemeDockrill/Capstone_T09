@@ -27,7 +27,8 @@ void setup() {
   //initializeLoadCells();
 
   // initialize motors
-  //initializeMotors();
+  Motor_Control_Initialize();
+  Motor_Control_Loop_Start();
   
   Serial.begin(9600);
 

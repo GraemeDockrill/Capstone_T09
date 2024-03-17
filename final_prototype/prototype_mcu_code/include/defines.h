@@ -15,18 +15,18 @@
 #define LOAD_CELL2_DATA_PIN 41
 
 // encoder pins
-#define ENC1_A 2
-#define ENC1_B 3
-#define ENC2_A 4
-#define ENC2_B 5
-#define ENC3_A 6
-#define ENC3_B 7
-#define ENC4_A 8
-#define ENC4_B 9
+#define ENC1_A 30
+#define ENC1_B 33
+#define ENC2_A 34
+#define ENC2_B 35
+#define ENC3_A 36
+#define ENC3_B 37
+#define ENC4_A 38
+#define ENC4_B 39
 
 // motor driver pins
-#define MOT1_PUL 23
-#define MOT1_DIR 22
+#define MOT1_PUL 2
+#define MOT1_DIR 24
 #define MOT2_PUL 21
 #define MOT2_DIR 20
 #define MOT3_PUL 19

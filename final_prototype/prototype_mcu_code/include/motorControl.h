@@ -13,12 +13,6 @@
 #include <dataLogger.h>
 #include <serialCommunicator.h>
 
-// create motor objects
-extern AccelStepper stepper1;
-extern AccelStepper stepper2;
-extern AccelStepper stepper3;
-extern AccelStepper stepper4;
-
 // create encoder objects
 extern Encoder encoder1;
 extern Encoder encoder2;
@@ -27,58 +21,31 @@ extern Encoder encoder4;
 
 // declaring struct for motor parameters
 typedef struct {
-   IMXRT_TMR_t timer_reg;
-   IRQ_NUMBER_t irq_vector;
-} motorParams_t;
+   IMXRT_TMR_t* timer_reg;
+} Interrupt_Parameters_t;
 
 // declare thread for function for controlling the motors
 // continually running control loop for the 4 motors
 void MotorControlThread(void* arg);
 
-// initialize motors with parameters
-void initializeMotors(void);
 
-// set motor speeds for manual movement
-void setManualMotorSpeeds(int speed);
+void Motor_Control_Initialize(void);
 
-// stop motors
-void stopMotors(void);
+void Motor_Interrupt_Initialize(Interrupt_Parameters_t interrupt_parameters);
 
-// start cyclic stretching test
-void startCyclicStretching(int cycles);
+void Motor_Control_Loop_Start(void);
 
-// sets all motor targets
-void setMotorTargets (int target);
+void Motor_Control_Loop_Stop(void);
 
-// sets all motor parameters
-void setMotorParameters(int start_steps, int speed);
+void Motor1_QTIMER1_ISR(void);
 
-// // ISR for motor1 control using QTIMER1
-// void motor1_QTIMER1_ISR(void);
+void Motor2_QTIMER2_ISR(void);
 
-class motor{
-public:
-    motorParams_t motorParams;
-    Encoder* encoder_ptr;
+void Motor3_QTIMER3_ISR(void);
 
-    // initialize motor timer operation
-    motor(motorParams_t inputMotorParams, Encoder* input_encoder_ptr){
-        motorParams = inputMotorParams;
-        encoder_ptr = input_encoder_ptr;
-        motorInterruptInit();
-    }
+void Motor4_QTIMER4_ISR(void);
 
-    void motorInterruptInit(void);
-
-    void motorEnable(bool enable);
-
-    // ISR for motor1 control using QTIMER1
-    static void motor1_QTIMER1_ISR(void);
-
-
-private:
-
-
-};
+// initializes motor hardware pins
+void Motor_Hardware_Initialize(void);
 
 #endif
