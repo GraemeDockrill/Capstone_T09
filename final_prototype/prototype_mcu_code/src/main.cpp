@@ -16,17 +16,16 @@ float y2;
 void setup() {
   // put your setup code here, to run once:
 
-  g_trajectory.motor1 = {
-    .trajectory_finished = false,
-    .direction = NEGATIVE_DIR,
-    .acc_pos = 30000,
-    .const_spd_pos = 20000,
-    .dec_pos = 10000,
-    .slope = 10,
-    .current_steps_per_sec = 200,
-  };
-
-  encoder1.write(40000);
+  // g_trajectory.motor1 = {
+  //   .axis = X_AXIS,
+  //   .trajectory_finished = false,
+  //   .direction = POSITIVE_DIR,
+  //   .acc_pos = 0,
+  //   .const_spd_pos = 0,
+  //   .dec_pos = 10.0,
+  //   .speed_increment = 0,
+  //   .current_steps_per_sec = 200,
+  // };
 
   portBASE_TYPE s1, s2, s3;
 
@@ -38,6 +37,25 @@ void setup() {
 
   // initialize motors
   Motor_Control_Initialize();
+  
+  
+  Trajectory_Params_t trajectory_params = {
+    .x = {
+      .initial_pos_steps = 0.0,
+      .target_pos_steps = 8000.0,
+      .avg_speed_sps = 2000.0,
+    },
+    .y = {
+      .initial_pos_steps = 0.0,
+      .target_pos_steps = 8000.0,
+      .avg_speed_sps = 2000.0,
+    },
+  };
+
+  Trajectory_Generate(&trajectory_params, &g_trajectory.motor1);
+  Trajectory_Generate(&trajectory_params, &g_trajectory.motor2);
+  Trajectory_Generate(&trajectory_params, &g_trajectory.motor3);
+  Trajectory_Generate(&trajectory_params, &g_trajectory.motor4);
   Motor_Control_Loop_Start();
   
   Serial.begin(9600);

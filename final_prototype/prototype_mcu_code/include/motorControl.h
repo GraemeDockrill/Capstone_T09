@@ -19,13 +19,24 @@ extern Encoder encoder2;
 extern Encoder encoder3;
 extern Encoder encoder4;
 
-#define ACCELERATION_INTERRUPT_INTERVAL 65535
-#define QTIMER_FREQ_HZ 4687500
+#define QTIMER_FREQ_HZ 4687500.0
+#define ACCELERATION_INTERRUPT_INTERVAL 65535.0
 
-#define MIN_SPS 200
-#define MAX_SPS 2000
+#define SPS_TO_PPR 1.25
+
+#define MIN_SPS 1000
+#define MAX_SPS 5000
 #define MIN_SPS_CMPLD QTIMER_FREQ_HZ/MIN_SPS
 #define MAX_SPS_CMPLD QTIMER_FREQ_HZ/MAX_SPS
+
+#define TRAJECTORY_ACCELERATION_SPSPS 3000.0
+
+#define ENCODER_TARGET_TOLERANCE 10
+
+// #define SPEED_INCREMENT (ACCELERATION_INTERRUPT_INTERVAL / QTIMER_FREQ_HZ) * TRAJECTORY_ACCELERATION_SPSPS
+
+#define X_AXIS 0
+#define Y_AXIS 1
 
 // declaring struct for motor parameters
 typedef struct {
@@ -33,13 +44,14 @@ typedef struct {
 } Interrupt_Parameters_t;
 
 typedef struct {
+    bool axis;
     bool trajectory_finished;
     bool direction;
-    int acc_pos;
-    int const_spd_pos;
-    int dec_pos;
-    int slope;
-    int current_steps_per_sec;
+    float acc_pos;
+    float const_spd_pos;
+    float dec_pos;
+    float speed_increment;
+    float current_steps_per_sec;
 } Motor_Control_t;
 
 typedef struct {
@@ -48,6 +60,18 @@ typedef struct {
     Motor_Control_t motor3;
     Motor_Control_t motor4;
 } Trajectory_t;
+
+typedef struct {
+    int initial_pos_steps;
+    int target_pos_steps;
+    int avg_speed_sps; 
+} Trajectory_Axis_Params_t;
+
+typedef struct{
+    Trajectory_Axis_Params_t x;
+    Trajectory_Axis_Params_t y;
+} Trajectory_Params_t;
+
 
 extern Trajectory_t g_trajectory;
 
@@ -63,6 +87,8 @@ void Motor_Interrupt_Initialize(Interrupt_Parameters_t interrupt_parameters);
 void Motor_Control_Loop_Start(void);
 
 void Motor_Control_Loop_Stop(void);
+
+void Trajectory_Generate(Trajectory_Params_t* trajectory_params, Motor_Control_t* motor_ptr);
 
 void Motor1_QTIMER1_ISR(void);
 

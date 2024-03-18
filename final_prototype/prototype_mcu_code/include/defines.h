@@ -37,8 +37,6 @@
 #define POSITIVE_DIR 1
 #define NEGATIVE_DIR 0
 
-#define ENCODER_TARGET_TOLERANCE 10
-
 // define bit constants
 #define BIT0 0x0001
 #define BIT1 0x0002
