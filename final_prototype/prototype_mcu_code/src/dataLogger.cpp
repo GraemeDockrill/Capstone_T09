@@ -60,10 +60,10 @@ void LoggingDataReadThread(void* arg){
     logger_queue_message.time_stamp = (int) millis();
     logger_queue_message.data1 = y3;
     logger_queue_message.data2 = y2;
-    logger_queue_message.data3 = computeEncoderTest(x);
-    logger_queue_message.data4 = computeEncoderTest(x);
-    logger_queue_message.data5 = computeEncoderTest(x);
-    logger_queue_message.data6 = computeEncoderTest(x);
+    logger_queue_message.data3 = encoder1.read();
+    logger_queue_message.data4 = encoder1.read()>>16;
+    logger_queue_message.data5 = encoder1.read()>>16;
+    logger_queue_message.data6 = encoder1.read()>>16;
 
     // enqueue message for serial thread
     xQueueSend(data_logger_queue, (void *) &logger_queue_message, 0);

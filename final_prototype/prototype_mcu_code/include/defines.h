@@ -15,8 +15,8 @@
 #define LOAD_CELL2_DATA_PIN 41
 
 // encoder pins
-#define ENC1_A 30
-#define ENC1_B 33
+#define ENC1_A 3
+#define ENC1_B 4
 #define ENC2_A 34
 #define ENC2_B 35
 #define ENC3_A 36
@@ -26,13 +26,18 @@
 
 // motor driver pins
 #define MOT1_PUL 2
-#define MOT1_DIR 24
+#define MOT1_DIR 22
 #define MOT2_PUL 21
 #define MOT2_DIR 20
 #define MOT3_PUL 19
 #define MOT3_DIR 18
 #define MOT4_PUL 17
 #define MOT4_DIR 16
+
+#define POSITIVE_DIR 1
+#define NEGATIVE_DIR 0
+
+#define ENCODER_TARGET_TOLERANCE 10
 
 // define bit constants
 #define BIT0 0x0001

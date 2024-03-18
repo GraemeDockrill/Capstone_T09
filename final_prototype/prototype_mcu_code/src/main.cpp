@@ -16,7 +16,17 @@ float y2;
 void setup() {
   // put your setup code here, to run once:
 
-  PIT_TFLG0 = 1;
+  g_trajectory.motor1 = {
+    .trajectory_finished = false,
+    .direction = NEGATIVE_DIR,
+    .acc_pos = 30000,
+    .const_spd_pos = 20000,
+    .dec_pos = 10000,
+    .slope = 10,
+    .current_steps_per_sec = 200,
+  };
+
+  encoder1.write(40000);
 
   portBASE_TYPE s1, s2, s3;
 
