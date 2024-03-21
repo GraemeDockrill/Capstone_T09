@@ -27,7 +27,7 @@ int relative_target_pos_steps = 0;
 Trajectory_t g_trajectory;
 
 // create trajectory axis parameters
-Trajectory_Params_t trajectory_params;
+Trajectory_Params_t g_trajectory_params;
 
 // create encoder objects
 Encoder encoder1(ENC1_A, ENC1_B);
@@ -46,45 +46,33 @@ void MotorControlThread(void* arg){
     }
     else if(auto_control){
 
-      // run motors to target position
+      // if motors reached target position
       if (g_trajectory.motor1.trajectory_finished && g_trajectory.motor2.trajectory_finished && g_trajectory.motor3.trajectory_finished && g_trajectory.motor4.trajectory_finished)
       {
+        // if message waiting in the queue, then pop it
+        if(xQueueReceive(motor_traj_queue, (Trajectory_Params_t*) &g_trajectory_params, 0)){
 
-        // pop trajectory from queue
-        
-        // decrement cycles
-        
-        // generate trajectories
-        // Trajectory_Generate(&trajectory_params, &g_trajectory.motor1);
-        // Trajectory_Generate(&trajectory_params, &g_trajectory.motor2);
-        // Trajectory_Generate(&trajectory_params, &g_trajectory.motor3);
-        // Trajectory_Generate(&trajectory_params, &g_trajectory.motor4);
-        
-        // requeue trajectory
+          // stop motors
+          Motor_Control_Loop_Stop();
 
-        // start motors        
-        // Motor_Control_Loop_Start();
-      }
+          // decrement the number of cycles for each and generate trajectories
+          g_trajectory_params.cycles--;
 
-      
-      // if(cyclic_stretching){
-      //   // if reached min stretch position
-      //   if(stepper1.currentPosition() == min_stretch_steps && stepper2.currentPosition() == min_stretch_steps  && stepper3.currentPosition() == min_stretch_steps  && stepper4.currentPosition() == min_stretch_steps){
-      //     setMotorTargets(max_stretch_steps);
-      //     current_cycles++;
-      //   }
-      //   // if reached max stretch position
-      //   else if(stepper1.currentPosition() == max_stretch_steps && stepper2.currentPosition() == max_stretch_steps  && stepper3.currentPosition() == max_stretch_steps  && stepper4.currentPosition() == max_stretch_steps){
-      //     setMotorTargets(min_stretch_steps);
-      //   }
+          // generate trajectories
+          Trajectory_Generate(&g_trajectory_params, &g_trajectory.motor1);
+          Trajectory_Generate(&g_trajectory_params, &g_trajectory.motor2);
+          Trajectory_Generate(&g_trajectory_params, &g_trajectory.motor3);
+          Trajectory_Generate(&g_trajectory_params, &g_trajectory.motor4);
+          
+          // requeue if number of cycles > 0
+          if(g_trajectory_params.cycles > 0){
+            xQueueSend(motor_traj_queue, (Trajectory_Params_t*) &g_trajectory_params, 0);
+          }
 
-      //   // if target cycles reached, stop
-      //   if(current_cycles >= target_cycles){
-      //     cyclic_stretching = 0;
-      //     auto_control = 0;
-      //   }
-      // }
-      
+          // start motors
+          Motor_Control_Loop_Start();
+        }
+      }      
     }
 
     // return mutex
@@ -281,19 +269,17 @@ void Motor1_QTIMER1_ISR(void){
     
     // if below the target
     if(motor1_pos < g_trajectory.motor1.dec_pos_pulses - ENCODER_TARGET_TOLERANCE){
-      // move positive
+      // move positive & take step
       digitalWrite(MOT1_DIR, POSITIVE_DIR);
-      // take step
       digitalWrite(MOT1_PUL, motor1_step_state);
     }
     // if above the target
     else if(motor1_pos > g_trajectory.motor1.dec_pos_pulses + ENCODER_TARGET_TOLERANCE){
-      // move negative
+      // move negative & take step
       digitalWrite(MOT1_DIR, NEGATIVE_DIR);
-      // take step
       digitalWrite(MOT1_PUL, motor1_step_state);
     }
-    // within tolerance of position
+    // if within tolerance of position
     else{
       Motor_Control_Loop_Stop();
       g_trajectory.motor1.trajectory_finished = true;
@@ -301,7 +287,6 @@ void Motor1_QTIMER1_ISR(void){
 
     // clear stepping interrupt flag
     IMXRT_TMR1.CH[0].CSCTRL &= ~(TMR_CSCTRL_TCF1);
-
   }
 
   // if acceleration counter interrupt (TMR1_timer1)
@@ -312,6 +297,7 @@ void Motor1_QTIMER1_ISR(void){
 
       // if in acceleration phase
       if(motor1_pos < g_trajectory.motor1.acc_pos_pulses){
+
         // if we are below the maximum motor speed, speed up
         if (QTIMER_FREQ_HZ / g_trajectory.motor1.current_steps_per_sec >= MAX_SPS_CMPLD){
           // speed up motor
@@ -323,12 +309,15 @@ void Motor1_QTIMER1_ISR(void){
           IMXRT_TMR1.CH[0].CMPLD1 = MAX_SPS_CMPLD; // start from this value after compare
         }
       }
+
       // if in constant speed phase
       else if(motor1_pos < g_trajectory.motor1.const_spd_pos_pulses){
         // do nothing
       }
+
       // if in constant deceleration phase
       else if(motor1_pos < g_trajectory.motor1.dec_pos_pulses){
+
         // if we are above the minimum speed, slow down
         if(QTIMER_FREQ_HZ / g_trajectory.motor1.current_steps_per_sec <= MIN_SPS_CMPLD){
           // slow down motor
@@ -341,6 +330,7 @@ void Motor1_QTIMER1_ISR(void){
         }
       }
     }
+
     // if motor1 moving in -ve direction
     else if(g_trajectory.motor1.direction == NEGATIVE_DIR){
 
@@ -355,10 +345,13 @@ void Motor1_QTIMER1_ISR(void){
           IMXRT_TMR1.CH[0].CMPLD1 = MAX_SPS_CMPLD; // start from this value after compare
         }
       }
+
       // if in constant speed phase
       else if(motor1_pos > g_trajectory.motor1.const_spd_pos_pulses){
         // do nothing
       }
+      
+      // if in constant deceleration phase
       else if(motor1_pos > g_trajectory.motor1.dec_pos_pulses){
         if(QTIMER_FREQ_HZ / g_trajectory.motor1.current_steps_per_sec <= MIN_SPS_CMPLD){
           // slow down motor

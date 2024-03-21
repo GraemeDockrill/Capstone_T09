@@ -15,6 +15,8 @@
 #include <motorControl.h>
 
 #define ZERO_STRETCH_POS_STEPS 30000
+#define MAX_TARGET_STEPS ZERO_STRETCH_POS_STEPS + 3680
+#define MAX_AVG_SPD_SPS 
 
 // declare semaphore handles
 extern SemaphoreHandle_t motor_mutex, empty, full;

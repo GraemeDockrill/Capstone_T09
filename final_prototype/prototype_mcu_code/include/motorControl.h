@@ -69,7 +69,6 @@ typedef struct {
     int initial_pos_steps;
     int target_pos_steps;
     int avg_speed_sps; 
-    int cycles;
 } Trajectory_Motor_Params_t;
 
 // struct holding trajectory parameters for each axis
@@ -78,9 +77,11 @@ typedef struct{
     Trajectory_Motor_Params_t motor2;
     Trajectory_Motor_Params_t motor3;
     Trajectory_Motor_Params_t motor4;
+    int cycles;
 } Trajectory_Params_t;
 
 extern Trajectory_t g_trajectory;
+extern Trajectory_Params_t g_trajectory_params;
 
 extern int relative_target_pos_steps;
 

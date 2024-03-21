@@ -112,22 +112,20 @@ void SerialThread(void* arg){
               motor_traj_message.motor1.initial_pos_steps = ZERO_STRETCH_POS_STEPS;
               motor_traj_message.motor1.target_pos_steps = target_stretch_pos_steps;
               motor_traj_message.motor1.avg_speed_sps = avg_spd_sps;
-              motor_traj_message.motor1.cycles = 1;
               // motor 2
               motor_traj_message.motor2.initial_pos_steps = ZERO_STRETCH_POS_STEPS;
               motor_traj_message.motor2.target_pos_steps = target_stretch_pos_steps;
               motor_traj_message.motor2.avg_speed_sps = avg_spd_sps;
-              motor_traj_message.motor2.cycles = 1;
               // motor 3
               motor_traj_message.motor3.initial_pos_steps = ZERO_STRETCH_POS_STEPS;
               motor_traj_message.motor3.target_pos_steps = target_stretch_pos_steps;
               motor_traj_message.motor3.avg_speed_sps = avg_spd_sps;
-              motor_traj_message.motor3.cycles = 1;
               // motor 4
               motor_traj_message.motor4.initial_pos_steps = ZERO_STRETCH_POS_STEPS;
               motor_traj_message.motor4.target_pos_steps = target_stretch_pos_steps;
               motor_traj_message.motor4.avg_speed_sps = avg_spd_sps;
-              motor_traj_message.motor4.cycles = 1;
+              // set number of cycles
+              motor_traj_message.cycles = 1;
               xQueueSend(motor_traj_queue, (Trajectory_Params_t *) &motor_traj_message, 0);
             }
           break;
@@ -142,27 +140,97 @@ void SerialThread(void* arg){
               motor_traj_message.motor1.initial_pos_steps = target_stretch_pos_steps;
               motor_traj_message.motor1.target_pos_steps = ZERO_STRETCH_POS_STEPS;
               motor_traj_message.motor1.avg_speed_sps = avg_spd_sps;
-              motor_traj_message.motor1.cycles = 1;
               // motor 2
               motor_traj_message.motor2.initial_pos_steps = target_stretch_pos_steps;
               motor_traj_message.motor2.target_pos_steps = ZERO_STRETCH_POS_STEPS;
               motor_traj_message.motor2.avg_speed_sps = avg_spd_sps;
-              motor_traj_message.motor2.cycles = 1;
               // motor 3
               motor_traj_message.motor3.initial_pos_steps = target_stretch_pos_steps;
               motor_traj_message.motor3.target_pos_steps = ZERO_STRETCH_POS_STEPS;
               motor_traj_message.motor3.avg_speed_sps = avg_spd_sps;
-              motor_traj_message.motor3.cycles = 1;
               // motor 4
               motor_traj_message.motor4.initial_pos_steps = target_stretch_pos_steps;
               motor_traj_message.motor4.target_pos_steps = ZERO_STRETCH_POS_STEPS;
               motor_traj_message.motor4.avg_speed_sps = avg_spd_sps;
-              motor_traj_message.motor4.cycles = 1;
+              // set number of cycles
+              motor_traj_message.cycles = 1;
               xQueueSend(motor_traj_queue, (Trajectory_Params_t *) &motor_traj_message, 0);
             }
           break;
           case CYCLIC_STRETCHING: // cmd_byte0 = 6
-            
+            // initialize message for motor trajectory
+            Trajectory_Params_t motor_traj_message;
+
+            // if membrane parameters valid and no messages in queue
+            if(parameters_valid && !xQueuePeek(motor_traj_queue, (Trajectory_Params_t *) &motor_traj_message, 0)){
+              // create initial move to zero command
+              // motor 1
+              motor_traj_message.motor1.initial_pos_steps = target_stretch_pos_steps;
+              motor_traj_message.motor1.target_pos_steps = ZERO_STRETCH_POS_STEPS;
+              motor_traj_message.motor1.avg_speed_sps = avg_spd_sps;
+              // motor 2
+              motor_traj_message.motor2.initial_pos_steps = target_stretch_pos_steps;
+              motor_traj_message.motor2.target_pos_steps = ZERO_STRETCH_POS_STEPS;
+              motor_traj_message.motor2.avg_speed_sps = avg_spd_sps;
+              // motor 3
+              motor_traj_message.motor3.initial_pos_steps = target_stretch_pos_steps;
+              motor_traj_message.motor3.target_pos_steps = ZERO_STRETCH_POS_STEPS;
+              motor_traj_message.motor3.avg_speed_sps = avg_spd_sps;
+              // motor 4
+              motor_traj_message.motor4.initial_pos_steps = target_stretch_pos_steps;
+              motor_traj_message.motor4.target_pos_steps = ZERO_STRETCH_POS_STEPS;
+              motor_traj_message.motor4.avg_speed_sps = avg_spd_sps;
+              // set  to move to zero once
+              motor_traj_message.cycles = 1;
+              // enqueue trajectory
+              xQueueSend(motor_traj_queue, (Trajectory_Params_t *) &motor_traj_message, 0);
+
+
+              // create move to max stretch at set number of cycles
+              // motor 1
+              motor_traj_message.motor1.initial_pos_steps = ZERO_STRETCH_POS_STEPS;
+              motor_traj_message.motor1.target_pos_steps = target_stretch_pos_steps;
+              motor_traj_message.motor1.avg_speed_sps = avg_spd_sps;
+              // motor 2
+              motor_traj_message.motor2.initial_pos_steps = ZERO_STRETCH_POS_STEPS;
+              motor_traj_message.motor2.target_pos_steps = target_stretch_pos_steps;
+              motor_traj_message.motor2.avg_speed_sps = avg_spd_sps;
+              // motor 3
+              motor_traj_message.motor3.initial_pos_steps = ZERO_STRETCH_POS_STEPS;
+              motor_traj_message.motor3.target_pos_steps = target_stretch_pos_steps;
+              motor_traj_message.motor3.avg_speed_sps = avg_spd_sps;
+              // motor 4
+              motor_traj_message.motor4.initial_pos_steps = ZERO_STRETCH_POS_STEPS;
+              motor_traj_message.motor4.target_pos_steps = target_stretch_pos_steps;
+              motor_traj_message.motor4.avg_speed_sps = avg_spd_sps;
+              // set number of cycles
+              motor_traj_message.cycles = data_int0;
+              // enqueue trajectory
+              xQueueSend(motor_traj_queue, (Trajectory_Params_t *) &motor_traj_message, 0);
+
+
+              // create move to zero stretch at set number of of cycles
+              // motor 1
+              motor_traj_message.motor1.initial_pos_steps = target_stretch_pos_steps;
+              motor_traj_message.motor1.target_pos_steps = ZERO_STRETCH_POS_STEPS;
+              motor_traj_message.motor1.avg_speed_sps = avg_spd_sps;
+              // motor 2
+              motor_traj_message.motor2.initial_pos_steps = target_stretch_pos_steps;
+              motor_traj_message.motor2.target_pos_steps = ZERO_STRETCH_POS_STEPS;
+              motor_traj_message.motor2.avg_speed_sps = avg_spd_sps;
+              // motor 3
+              motor_traj_message.motor3.initial_pos_steps = target_stretch_pos_steps;
+              motor_traj_message.motor3.target_pos_steps = ZERO_STRETCH_POS_STEPS;
+              motor_traj_message.motor3.avg_speed_sps = avg_spd_sps;
+              // motor 4
+              motor_traj_message.motor4.initial_pos_steps = target_stretch_pos_steps;
+              motor_traj_message.motor4.target_pos_steps = ZERO_STRETCH_POS_STEPS;
+              motor_traj_message.motor4.avg_speed_sps = avg_spd_sps;
+              // set number of cycles
+              motor_traj_message.cycles = data_int0;
+              // enqueue trajectory
+              xQueueSend(motor_traj_queue, (Trajectory_Params_t *) &motor_traj_message, 0);
+            }
           break;
           case STOP:              // cmd_byte0 = 7
             digitalWrite(LED_BUILTIN, LOW);
