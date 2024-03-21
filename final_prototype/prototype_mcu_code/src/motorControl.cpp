@@ -4,6 +4,7 @@
 
 #include <motorControl.h>
 
+// encoder positions
 long enc1_pos = 0;
 long enc2_pos = 0;
 long enc3_pos = 0;
@@ -20,8 +21,13 @@ int target_steps = 0;
 int target_cycles = 0;
 int current_cycles = 0;
 
+int relative_target_pos_steps = 0;
+
 // create trajectory
 Trajectory_t g_trajectory;
+
+// create trajectory axis parameters
+Trajectory_Params_t trajectory_params;
 
 // create encoder objects
 Encoder encoder1(ENC1_A, ENC1_B);
@@ -43,24 +49,20 @@ void MotorControlThread(void* arg){
       // run motors to target position
       if (g_trajectory.motor1.trajectory_finished && g_trajectory.motor2.trajectory_finished && g_trajectory.motor3.trajectory_finished && g_trajectory.motor4.trajectory_finished)
       {
-                // Populatw Trajectory Parmas for motor 1
-        // Trajectory_Params_t trajectory_params = {
-        //   .x = {
-        //     .initial_pos_steps = ,
-        //     .target_pos_steps = ,
-        //     .avg_speed_sps = ,
-        //   },
-        //   .y = {
-        //     .initial_pos_steps = ,
-        //     .target_pos_steps = ,
-        //     .avg_speed_sps = ,
-        //   },
-        // };
 
+        // pop trajectory from queue
+        
+        // decrement cycles
+        
+        // generate trajectories
         // Trajectory_Generate(&trajectory_params, &g_trajectory.motor1);
         // Trajectory_Generate(&trajectory_params, &g_trajectory.motor2);
         // Trajectory_Generate(&trajectory_params, &g_trajectory.motor3);
         // Trajectory_Generate(&trajectory_params, &g_trajectory.motor4);
+        
+        // requeue trajectory
+
+        // start motors        
         // Motor_Control_Loop_Start();
       }
 
@@ -97,38 +99,43 @@ void MotorControlThread(void* arg){
 void Motor_Control_Initialize(void){
 
   // set up motor coordinate frames
-  g_trajectory.motor1.axis = X_AXIS;
-  g_trajectory.motor2.axis = Y_AXIS;
-  g_trajectory.motor3.axis = X_AXIS;
-  g_trajectory.motor4.axis = Y_AXIS;
+  g_trajectory.motor1.motor_ID = 1;
+  g_trajectory.motor2.motor_ID = 2;
+  g_trajectory.motor3.motor_ID = 3;
+  g_trajectory.motor4.motor_ID = 4;
 
   Motor_Hardware_Initialize();
 
+  // assign QTIMER register to each motor
   Interrupt_Parameters_t motor1_interrupt_params = {
-    .timer_reg = (IMXRT_TMR_t*)IMXRT_TMR1_ADDRESS,
+    .timer_reg = (IMXRT_TMR_t*)IMXRT_TMR1_ADDRESS,  // QTIMER 1
   };
 
   Interrupt_Parameters_t motor2_interrupt_params = {
-    .timer_reg = (IMXRT_TMR_t*)IMXRT_TMR2_ADDRESS,
+    .timer_reg = (IMXRT_TMR_t*)IMXRT_TMR2_ADDRESS,  // QTIMER 2
   };
 
   Interrupt_Parameters_t motor3_interrupt_params = {
-    .timer_reg = (IMXRT_TMR_t*)IMXRT_TMR3_ADDRESS,
+    .timer_reg = (IMXRT_TMR_t*)IMXRT_TMR3_ADDRESS,  // QTIMER 3
   };
 
   Interrupt_Parameters_t motor4_interrupt_params = {
-    .timer_reg = (IMXRT_TMR_t*)IMXRT_TMR4_ADDRESS,
+    .timer_reg = (IMXRT_TMR_t*)IMXRT_TMR4_ADDRESS,  // QTIMER 4
   };
 
-  Motor_Interrupt_Initialize(motor1_interrupt_params);
-  attachInterruptVector(IRQ_QTIMER1, Motor1_QTIMER1_ISR);  // attach interrupt vector to ISR
-  NVIC_ENABLE_IRQ(IRQ_QTIMER1);
+  // motor 1 QTIMER1
+  Motor_Interrupt_Initialize(motor1_interrupt_params);      // fill registers for QTIMER
+  attachInterruptVector(IRQ_QTIMER1, Motor1_QTIMER1_ISR);   // attach interrupt vector to ISR
+  NVIC_ENABLE_IRQ(IRQ_QTIMER1);                             // enable interrupt vector
+  // motor 2 QTIMER2
   Motor_Interrupt_Initialize(motor2_interrupt_params);
   attachInterruptVector(IRQ_QTIMER2, Motor2_QTIMER2_ISR);  // attach interrupt vector to ISR
   NVIC_ENABLE_IRQ(IRQ_QTIMER2);
+  // motor 3 QTIMER3
   Motor_Interrupt_Initialize(motor3_interrupt_params);
   attachInterruptVector(IRQ_QTIMER3, Motor3_QTIMER3_ISR);  // attach interrupt vector to ISR
   NVIC_ENABLE_IRQ(IRQ_QTIMER3);
+  // motor 4 QTIMER4
   Motor_Interrupt_Initialize(motor4_interrupt_params);
   attachInterruptVector(IRQ_QTIMER4, Motor4_QTIMER4_ISR);  // attach interrupt vector to ISR
   NVIC_ENABLE_IRQ(IRQ_QTIMER4);
@@ -185,6 +192,7 @@ void Motor_Control_Loop_Start(void){
 }
 
 void Motor_Control_Loop_Stop(void){
+  // stop counting each QTIMER channel
   IMXRT_TMR1.CH[0].CTRL &= ~(TMR_CTRL_CM(0b001));
   IMXRT_TMR1.CH[1].CTRL &= ~(TMR_CTRL_CM(0b001));
   IMXRT_TMR2.CH[0].CTRL &= ~(TMR_CTRL_CM(0b001));
@@ -194,6 +202,7 @@ void Motor_Control_Loop_Stop(void){
   IMXRT_TMR4.CH[0].CTRL &= ~(TMR_CTRL_CM(0b001));
   IMXRT_TMR4.CH[1].CTRL &= ~(TMR_CTRL_CM(0b001));
 
+  // reset QTIMER channel counters to 0
   IMXRT_TMR1.CH[0].CNTR = 0;
   IMXRT_TMR1.CH[1].CNTR = 0;
   IMXRT_TMR2.CH[0].CNTR = 0;
@@ -206,18 +215,27 @@ void Motor_Control_Loop_Stop(void){
 
 void Trajectory_Generate(Trajectory_Params_t* trajectory_params, Motor_Control_t* motor_ptr){
 
-  Trajectory_Axis_Params_t* trajectory_axis_params;
+  Trajectory_Motor_Params_t* trajectory_motor_params;
 
-  if(motor_ptr->axis == X_AXIS){
-    trajectory_axis_params = &trajectory_params->x;
+  // find out which axis has been passed
+  if(motor_ptr->motor_ID == 1){
+    trajectory_motor_params = &trajectory_params->motor1;
+  }
+  else if(motor_ptr->motor_ID == 2){
+    trajectory_motor_params = &trajectory_params->motor2;
+  }
+  else if(motor_ptr->motor_ID == 3){
+    trajectory_motor_params = &trajectory_params->motor3;
   }
   else{
-    trajectory_axis_params = &trajectory_params->y;
+    trajectory_motor_params = &trajectory_params->motor4;
   }
 
+  // flag that the trajectory is not finished
   motor_ptr->trajectory_finished = false;
 
-  if(trajectory_axis_params->initial_pos_steps < trajectory_axis_params->target_pos_steps){
+  // determine which direction the move is
+  if(trajectory_motor_params->initial_pos_steps < trajectory_motor_params->target_pos_steps){
     motor_ptr->direction = POSITIVE_DIR;
   }
   else{
@@ -225,20 +243,22 @@ void Trajectory_Generate(Trajectory_Params_t* trajectory_params, Motor_Control_t
   }
 
   // solve for max speed with quadratic formula
-  float delta_pos = trajectory_axis_params->target_pos_steps - trajectory_axis_params->initial_pos_steps; // 8000
+  float delta_pos = trajectory_motor_params->target_pos_steps - trajectory_motor_params->initial_pos_steps; // 8000
   float a = -1 / TRAJECTORY_ACCELERATION_SPSPS; // 0.0001
-  float b = delta_pos/trajectory_axis_params->avg_speed_sps; // 4
+  float b = delta_pos/trajectory_motor_params->avg_speed_sps; // 4
   float c = -delta_pos; // 8000
 
-  float maxspeed = abs((-b + sqrtf(powf(b, 2) - 4*a*c))/(2*a)); // 
-  motor_ptr->acc_pos = SPS_TO_PPR * powf(maxspeed, 2)/(2*TRAJECTORY_ACCELERATION_SPSPS);
-  motor_ptr->const_spd_pos = motor_ptr->acc_pos + (SPS_TO_PPR * ((delta_pos * maxspeed) / trajectory_axis_params->avg_speed_sps - 2* powf(maxspeed, 2)/TRAJECTORY_ACCELERATION_SPSPS));
-  motor_ptr->dec_pos = trajectory_axis_params->target_pos_steps * SPS_TO_PPR;
+  // calculate individual motor control parameters used in interrupts
+  float max_speed_SPS = abs((-b + sqrtf(powf(b, 2) - 4*a*c))/(2*a)); // 
+  motor_ptr->acc_pos_pulses = SPS_TO_PPR * powf(max_speed_SPS, 2)/(2*TRAJECTORY_ACCELERATION_SPSPS);
+  motor_ptr->const_spd_pos_pulses = motor_ptr->acc_pos_pulses + (SPS_TO_PPR * ((delta_pos * max_speed_SPS) / trajectory_motor_params->avg_speed_sps - 2* powf(max_speed_SPS, 2)/TRAJECTORY_ACCELERATION_SPSPS));
+  motor_ptr->dec_pos_pulses = trajectory_motor_params->target_pos_steps * SPS_TO_PPR;
   motor_ptr->speed_increment = ((ACCELERATION_INTERRUPT_INTERVAL * TRAJECTORY_ACCELERATION_SPSPS) / QTIMER_FREQ_HZ) + 1; // constant slope of trapezoidal profile
   motor_ptr->current_steps_per_sec = MIN_SPS;
 }
 
 void Motor_Hardware_Initialize(void){
+  // set motor PUL and DIR pins to outputs
   pinMode(MOT1_PUL, OUTPUT);
   pinMode(MOT1_DIR, OUTPUT);
   // pinMode(MOT2_PUL, OUTPUT);
@@ -260,14 +280,14 @@ void Motor1_QTIMER1_ISR(void){
   if(TMR1_CSCTRL0 & TMR_CSCTRL_TCF1){
     
     // if below the target
-    if(motor1_pos < g_trajectory.motor1.dec_pos - ENCODER_TARGET_TOLERANCE){
+    if(motor1_pos < g_trajectory.motor1.dec_pos_pulses - ENCODER_TARGET_TOLERANCE){
       // move positive
       digitalWrite(MOT1_DIR, POSITIVE_DIR);
       // take step
       digitalWrite(MOT1_PUL, motor1_step_state);
     }
     // if above the target
-    else if(motor1_pos > g_trajectory.motor1.dec_pos + ENCODER_TARGET_TOLERANCE){
+    else if(motor1_pos > g_trajectory.motor1.dec_pos_pulses + ENCODER_TARGET_TOLERANCE){
       // move negative
       digitalWrite(MOT1_DIR, NEGATIVE_DIR);
       // take step
@@ -291,27 +311,31 @@ void Motor1_QTIMER1_ISR(void){
     if(g_trajectory.motor1.direction == POSITIVE_DIR){
 
       // if in acceleration phase
-      if(motor1_pos < g_trajectory.motor1.acc_pos){
+      if(motor1_pos < g_trajectory.motor1.acc_pos_pulses){
+        // if we are below the maximum motor speed, speed up
         if (QTIMER_FREQ_HZ / g_trajectory.motor1.current_steps_per_sec >= MAX_SPS_CMPLD){
           // speed up motor
           g_trajectory.motor1.current_steps_per_sec += g_trajectory.motor1.speed_increment;
           IMXRT_TMR1.CH[0].CMPLD1 = QTIMER_FREQ_HZ / g_trajectory.motor1.current_steps_per_sec;
         }
+        // else stay at max
         else{
           IMXRT_TMR1.CH[0].CMPLD1 = MAX_SPS_CMPLD; // start from this value after compare
         }
       }
       // if in constant speed phase
-      else if(motor1_pos < g_trajectory.motor1.const_spd_pos){
+      else if(motor1_pos < g_trajectory.motor1.const_spd_pos_pulses){
         // do nothing
       }
       // if in constant deceleration phase
-      else if(motor1_pos < g_trajectory.motor1.dec_pos){
+      else if(motor1_pos < g_trajectory.motor1.dec_pos_pulses){
+        // if we are above the minimum speed, slow down
         if(QTIMER_FREQ_HZ / g_trajectory.motor1.current_steps_per_sec <= MIN_SPS_CMPLD){
           // slow down motor
           g_trajectory.motor1.current_steps_per_sec -= g_trajectory.motor1.speed_increment;
           IMXRT_TMR1.CH[0].CMPLD1 = QTIMER_FREQ_HZ / g_trajectory.motor1.current_steps_per_sec;
         }
+        // else stay at min
         else{
           IMXRT_TMR1.CH[0].CMPLD1 = MIN_SPS_CMPLD; // start from this value after compare
         }
@@ -321,7 +345,7 @@ void Motor1_QTIMER1_ISR(void){
     else if(g_trajectory.motor1.direction == NEGATIVE_DIR){
 
       // if in constant acceleration phase
-      if(motor1_pos > g_trajectory.motor1.acc_pos){
+      if(motor1_pos > g_trajectory.motor1.acc_pos_pulses){
         if (QTIMER_FREQ_HZ / g_trajectory.motor1.current_steps_per_sec >= MAX_SPS_CMPLD){
           // speed up motor
           g_trajectory.motor1.current_steps_per_sec += g_trajectory.motor1.speed_increment;
@@ -332,10 +356,10 @@ void Motor1_QTIMER1_ISR(void){
         }
       }
       // if in constant speed phase
-      else if(motor1_pos > g_trajectory.motor1.const_spd_pos){
+      else if(motor1_pos > g_trajectory.motor1.const_spd_pos_pulses){
         // do nothing
       }
-      else if(motor1_pos > g_trajectory.motor1.dec_pos){
+      else if(motor1_pos > g_trajectory.motor1.dec_pos_pulses){
         if(QTIMER_FREQ_HZ / g_trajectory.motor1.current_steps_per_sec <= MIN_SPS_CMPLD){
           // slow down motor
           g_trajectory.motor1.current_steps_per_sec -= g_trajectory.motor1.speed_increment;

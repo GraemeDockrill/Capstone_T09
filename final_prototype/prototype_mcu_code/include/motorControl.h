@@ -23,6 +23,7 @@ extern Encoder encoder4;
 #define ACCELERATION_INTERRUPT_INTERVAL 65535.0
 
 #define SPS_TO_PPR 1.25
+#define PPR_TO_SPS 0.8
 
 #define MIN_SPS 1000
 #define MAX_SPS 5000
@@ -38,22 +39,24 @@ extern Encoder encoder4;
 #define X_AXIS 0
 #define Y_AXIS 1
 
-// declaring struct for motor parameters
+// declaring struct for interrupt register parameters
 typedef struct {
     IMXRT_TMR_t* timer_reg;
 } Interrupt_Parameters_t;
 
+// struct for individual motor control parameters for a given trajectory
 typedef struct {
-    bool axis;
+    int motor_ID;
     bool trajectory_finished;
     bool direction;
-    float acc_pos;
-    float const_spd_pos;
-    float dec_pos;
+    float acc_pos_pulses;
+    float const_spd_pos_pulses;
+    float dec_pos_pulses;
     float speed_increment;
     float current_steps_per_sec;
 } Motor_Control_t;
 
+// overall trajectory struct for the device (holds all motor control parameters)
 typedef struct {
     Motor_Control_t motor1;
     Motor_Control_t motor2;
@@ -61,44 +64,67 @@ typedef struct {
     Motor_Control_t motor4;
 } Trajectory_t;
 
+// parameters required for generating a trajectory with Trajectory_Generate
 typedef struct {
     int initial_pos_steps;
     int target_pos_steps;
     int avg_speed_sps; 
-} Trajectory_Axis_Params_t;
+    int cycles;
+} Trajectory_Motor_Params_t;
 
+// struct holding trajectory parameters for each axis
 typedef struct{
-    Trajectory_Axis_Params_t x;
-    Trajectory_Axis_Params_t y;
+    Trajectory_Motor_Params_t motor1;
+    Trajectory_Motor_Params_t motor2;
+    Trajectory_Motor_Params_t motor3;
+    Trajectory_Motor_Params_t motor4;
 } Trajectory_Params_t;
 
-
 extern Trajectory_t g_trajectory;
+
+extern int relative_target_pos_steps;
 
 // declare thread for function for controlling the motors
 // continually running control loop for the 4 motors
 void MotorControlThread(void* arg);
 
-
+// initializes motors to start the position control loop and trajectory
 void Motor_Control_Initialize(void);
 
+// sets up QTIMER interrupt registers for acceleration and stepspeed timers
+// MOTOR1 QTIMER1 channel 0 - stepspeed | channel 1 - acceleration
+// MOTOR2 QTIMER2 channel 0 - stepspeed | channel 1 - acceleration
+// MOTOR3 QTIMER3 channel 0 - stepspeed | channel 1 - acceleration
+// MOTOR4 QTIMER4 channel 0 - stepspeed | channel 1 - acceleration
 void Motor_Interrupt_Initialize(Interrupt_Parameters_t interrupt_parameters);
 
+// sets initial speed of stepper motors, sets initial trajectory speed, start counting QTIMER channels
 void Motor_Control_Loop_Start(void);
 
+// stop counting QTIMER channels and reset channel counters to 0
 void Motor_Control_Loop_Stop(void);
 
+// computes individual motor control parameters for a certain motor based
+// on initial and target steps, as well as average speed for each axis
 void Trajectory_Generate(Trajectory_Params_t* trajectory_params, Motor_Control_t* motor_ptr);
 
+// ISR for control of motor1 uses QTIMER1
+// channel 0 - stepspeed | channel 1 - acceleration
 void Motor1_QTIMER1_ISR(void);
 
+// ISR for control of motor2 uses QTIMER2
+// channel 0 - stepspeed | channel 1 - acceleration
 void Motor2_QTIMER2_ISR(void);
 
+// ISR for control of motor3 uses QTIMER3
+// channel 0 - stepspeed | channel 1 - acceleration
 void Motor3_QTIMER3_ISR(void);
 
+// ISR for control of motor4 uses QTIMER4
+// channel 0 - stepspeed | channel 1 - acceleration
 void Motor4_QTIMER4_ISR(void);
 
-// initializes motor hardware pins
+// initializes motor hardware pins as outputs
 void Motor_Hardware_Initialize(void);
 
 #endif

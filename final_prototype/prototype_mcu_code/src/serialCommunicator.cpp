@@ -22,11 +22,16 @@ int received_char;
 
 int ESCByte = 0;        // for sending over UART
 
+int target_stretch_pos_steps = 0;
+int avg_spd_sps = 0;
+bool parameters_valid = false;
+
 // create semaphores and queue for thread safe queue
 SemaphoreHandle_t motor_mutex = xSemaphoreCreateCounting(1,1);
 SemaphoreHandle_t full = xSemaphoreCreateCounting(QUEUE_MAX_LENGTH, 0);
 SemaphoreHandle_t empty = xSemaphoreCreateCounting(QUEUE_MAX_LENGTH, QUEUE_MAX_LENGTH);
 QueueHandle_t data_logger_queue = xQueueCreate(QUEUE_MAX_LENGTH, 20);
+QueueHandle_t motor_traj_queue = xQueueCreate(QUEUE_MAX_LENGTH, 20);
 
 LoggerQueueMessage logger_queue_message;
 u_serial_message COM_message;
@@ -72,6 +77,8 @@ void SerialThread(void* arg){
 
       // if start byte is valid
       if(start_byte == 255){
+        // take mutex for updating motor target
+        xSemaphoreTake(motor_mutex, portMAX_DELAY);
 
         // parse data_int0 and data_int1 according to cmd_byte0
         switch(cmd_byte0){
@@ -85,23 +92,93 @@ void SerialThread(void* arg){
             
           break;
           case SET_PARAMETERS:    // cmd_byte0 = 3
-            
+            target_stretch_pos_steps = ZERO_STRETCH_POS_STEPS + data_int0;
+            avg_spd_sps = data_int0 * ((double)data_int1 / 100.0);
+
+            // ADD CHECKS IF PARAMETERS ARE VALID
+            // if(....)
+            parameters_valid = true;
+            // else
+            // parameters_valid = false;
           break;
           case STRETCH_TO_MAX:    // cmd_byte0 = 4
-            
+            // initialize message for motor trajectory
+            Trajectory_Params_t motor_traj_message;
+
+            // if membrane parameters valid and no messages in queue
+            if(parameters_valid && !xQueuePeek(motor_traj_queue, (Trajectory_Params_t *) &motor_traj_message, 0)){
+              // create trajectory message to send to motor control thread
+              // motor 1
+              motor_traj_message.motor1.initial_pos_steps = ZERO_STRETCH_POS_STEPS;
+              motor_traj_message.motor1.target_pos_steps = target_stretch_pos_steps;
+              motor_traj_message.motor1.avg_speed_sps = avg_spd_sps;
+              motor_traj_message.motor1.cycles = 1;
+              // motor 2
+              motor_traj_message.motor2.initial_pos_steps = ZERO_STRETCH_POS_STEPS;
+              motor_traj_message.motor2.target_pos_steps = target_stretch_pos_steps;
+              motor_traj_message.motor2.avg_speed_sps = avg_spd_sps;
+              motor_traj_message.motor2.cycles = 1;
+              // motor 3
+              motor_traj_message.motor3.initial_pos_steps = ZERO_STRETCH_POS_STEPS;
+              motor_traj_message.motor3.target_pos_steps = target_stretch_pos_steps;
+              motor_traj_message.motor3.avg_speed_sps = avg_spd_sps;
+              motor_traj_message.motor3.cycles = 1;
+              // motor 4
+              motor_traj_message.motor4.initial_pos_steps = ZERO_STRETCH_POS_STEPS;
+              motor_traj_message.motor4.target_pos_steps = target_stretch_pos_steps;
+              motor_traj_message.motor4.avg_speed_sps = avg_spd_sps;
+              motor_traj_message.motor4.cycles = 1;
+              xQueueSend(motor_traj_queue, (Trajectory_Params_t *) &motor_traj_message, 0);
+            }
           break;
           case RETURN_TO_ZERO:    // cmd_byte0 = 5
-            
+            // initialize message for motor trajectory
+            Trajectory_Params_t motor_traj_message;
+
+            // if membrane parameters valid and no messages in queue
+            if(parameters_valid && !xQueuePeek(motor_traj_queue, (Trajectory_Params_t *) &motor_traj_message, 0)){
+              // create trajectory message to send to motor control thread
+              // motor 1
+              motor_traj_message.motor1.initial_pos_steps = target_stretch_pos_steps;
+              motor_traj_message.motor1.target_pos_steps = ZERO_STRETCH_POS_STEPS;
+              motor_traj_message.motor1.avg_speed_sps = avg_spd_sps;
+              motor_traj_message.motor1.cycles = 1;
+              // motor 2
+              motor_traj_message.motor2.initial_pos_steps = target_stretch_pos_steps;
+              motor_traj_message.motor2.target_pos_steps = ZERO_STRETCH_POS_STEPS;
+              motor_traj_message.motor2.avg_speed_sps = avg_spd_sps;
+              motor_traj_message.motor2.cycles = 1;
+              // motor 3
+              motor_traj_message.motor3.initial_pos_steps = target_stretch_pos_steps;
+              motor_traj_message.motor3.target_pos_steps = ZERO_STRETCH_POS_STEPS;
+              motor_traj_message.motor3.avg_speed_sps = avg_spd_sps;
+              motor_traj_message.motor3.cycles = 1;
+              // motor 4
+              motor_traj_message.motor4.initial_pos_steps = target_stretch_pos_steps;
+              motor_traj_message.motor4.target_pos_steps = ZERO_STRETCH_POS_STEPS;
+              motor_traj_message.motor4.avg_speed_sps = avg_spd_sps;
+              motor_traj_message.motor4.cycles = 1;
+              xQueueSend(motor_traj_queue, (Trajectory_Params_t *) &motor_traj_message, 0);
+            }
           break;
           case CYCLIC_STRETCHING: // cmd_byte0 = 6
             
           break;
           case STOP:              // cmd_byte0 = 7
             digitalWrite(LED_BUILTIN, LOW);
+
+            // initialize message for motor trajectory
+            Trajectory_Params_t motor_traj_message;
+
+            // clear trajectory queue to stop any new movements
+            while(xQueueReceive(motor_traj_queue, (Trajectory_Params_t *) &motor_traj_message, 0));
           break;
           default:
           break;
         }
+
+        // return mutex
+        xSemaphoreGive(motor_mutex);
       }
     }
     // check if there is something in the send queue
@@ -111,7 +188,7 @@ void SerialThread(void* arg){
       xSemaphoreTake(full, portMAX_DELAY);
 
       // remove message from queue
-      xQueueReceive(data_logger_queue, (void *) &COM_message.parsed_message, portMAX_DELAY);
+      xQueueReceive(data_logger_queue, (u_serial_message *) &COM_message.parsed_message, portMAX_DELAY);
 
       // send message over UART
       Serial.write(255);

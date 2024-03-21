@@ -66,7 +66,7 @@ void LoggingDataReadThread(void* arg){
     logger_queue_message.data6 = encoder1.read()>>16;
 
     // enqueue message for serial thread
-    xQueueSend(data_logger_queue, (void *) &logger_queue_message, 0);
+    xQueueSend(data_logger_queue, (u_serial_message *) &logger_queue_message, 0);
 
     // return new full buffer semaphore
     xSemaphoreGive(full);

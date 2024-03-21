@@ -34,6 +34,7 @@
 #define MOT4_PUL 17
 #define MOT4_DIR 16
 
+// motor direction
 #define POSITIVE_DIR 1
 #define NEGATIVE_DIR 0
 

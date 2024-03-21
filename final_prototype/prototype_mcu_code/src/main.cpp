@@ -20,9 +20,9 @@ void setup() {
   //   .axis = X_AXIS,
   //   .trajectory_finished = false,
   //   .direction = POSITIVE_DIR,
-  //   .acc_pos = 0,
-  //   .const_spd_pos = 0,
-  //   .dec_pos = 10.0,
+  //   .acc_pos_pulses = 0,
+  //   .const_spd_pos_pulses = 0,
+  //   .dec_pos_pulses = 10.0,
   //   .speed_increment = 0,
   //   .current_steps_per_sec = 200,
   // };
@@ -38,26 +38,38 @@ void setup() {
   // initialize motors
   Motor_Control_Initialize();
   
-  
-  Trajectory_Params_t trajectory_params = {
-    .x = {
-      .initial_pos_steps = 0.0,
-      .target_pos_steps = 8000.0,
-      .avg_speed_sps = 2000.0,
-    },
-    .y = {
-      .initial_pos_steps = 0.0,
-      .target_pos_steps = 8000.0,
-      .avg_speed_sps = 2000.0,
-    },
-  };
+  // // test trajectory parameters for debugging
+  // Trajectory_Params_t trajectory_params = {
+  //   .motor1 = {
+  //     .initial_pos_steps = 0.0,
+  //     .target_pos_steps = 8000.0,
+  //     .avg_speed_sps = 2000.0,
+  //   },
+  //   .motor2 = {
+  //     .initial_pos_steps = 0.0,
+  //     .target_pos_steps = 8000.0,
+  //     .avg_speed_sps = 2000.0,
+  //   },
+  //   .motor3 = {
+  //     .initial_pos_steps = 0.0,
+  //     .target_pos_steps = 8000.0,
+  //     .avg_speed_sps = 2000.0,
+  //   },
+  //   .motor4 = {
+  //     .initial_pos_steps = 0.0,
+  //     .target_pos_steps = 8000.0,
+  //     .avg_speed_sps = 2000.0,
+  //   },
+  // };
 
-  Trajectory_Generate(&trajectory_params, &g_trajectory.motor1);
-  Trajectory_Generate(&trajectory_params, &g_trajectory.motor2);
-  Trajectory_Generate(&trajectory_params, &g_trajectory.motor3);
-  Trajectory_Generate(&trajectory_params, &g_trajectory.motor4);
-  Motor_Control_Loop_Start();
+  // // test movement for debugging
+  // Trajectory_Generate(&trajectory_params, &g_trajectory.motor1);
+  // Trajectory_Generate(&trajectory_params, &g_trajectory.motor2);
+  // Trajectory_Generate(&trajectory_params, &g_trajectory.motor3);
+  // Trajectory_Generate(&trajectory_params, &g_trajectory.motor4);
+  // Motor_Control_Loop_Start();
   
+  // begin serial monitor
   Serial.begin(9600);
 
   // create task at priority two

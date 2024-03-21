@@ -14,11 +14,14 @@
 #include <dataLogger.h>
 #include <motorControl.h>
 
+#define ZERO_STRETCH_POS_STEPS 30000
+
 // declare semaphore handles
 extern SemaphoreHandle_t motor_mutex, empty, full;
 
 // declare queue
 extern QueueHandle_t data_logger_queue;
+extern QueueHandle_t motor_traj_queue;
 
 // struct for message to be added to serial task queue
 struct LoggerQueueMessage{
@@ -37,6 +40,7 @@ union u_serial_message {
     byte temp_byte[20] ;
 } extern COM_message;
 
+// enum for control program command bytes
 enum incoming_message{
     HOME_AXES,
     MANUAL_POS_MOVE,
@@ -51,8 +55,6 @@ enum incoming_message{
 // declare thread function for thread 2
 // takes any full buffer spots and sends data over UART
 void SerialThread(void* arg);
-
-void semaphoreInitialize(void);
 
 // implementation of a circular buffer for dequeueing serial data
 class CircularBuffer{
