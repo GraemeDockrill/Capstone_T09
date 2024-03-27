@@ -207,12 +207,13 @@ void Trajectory_Generate(Trajectory_Params_t* trajectory_params, Motor_Control_t
 
   /*
   
-  ADD TING
+  ADD EDGE CASE CHECKING
   
   
   
   
   */
+  
 
 
   // find out which axis has been passed
@@ -232,24 +233,26 @@ void Trajectory_Generate(Trajectory_Params_t* trajectory_params, Motor_Control_t
   // flag that the trajectory is not finished
   motor_ptr->trajectory_finished = false;
 
-  // determine which direction the move is
-  if(trajectory_motor_params->initial_pos_steps < trajectory_motor_params->target_pos_steps){
-    motor_ptr->direction = POSITIVE_DIR;
-  }
-  else{
-    motor_ptr->direction = NEGATIVE_DIR;
-  }
+  // // determine which direction the move is
+  // if(trajectory_motor_params->initial_pos_steps < trajectory_motor_params->target_pos_steps){
+  //   motor_ptr->direction = POSITIVE_DIR;
+  // }
+  // else{
+  //   motor_ptr->direction = NEGATIVE_DIR;
+  // }
+
+  motor_ptr->direction = (trajectory_motor_params->target_pos_steps - trajectory_motor_params->initial_pos_steps)/abs(trajectory_motor_params->target_pos_steps - trajectory_motor_params->initial_pos_steps);
 
   // solve for max speed with quadratic formula
   float delta_pos_steps = trajectory_motor_params->target_pos_steps - trajectory_motor_params->initial_pos_steps; // 8000
   float a = -1 / TRAJECTORY_ACCELERATION_SPSPS; // 0.0001
-  float b = delta_pos_steps/trajectory_motor_params->avg_speed_sps; // 4
+  float b = delta_pos_steps/(motor_ptr->direction*trajectory_motor_params->avg_speed_sps); // 4 (multiply by direction since avg speed is input through form)
   float c = -delta_pos_steps; // 8000
-
+  float max_speed_SPS = (-b + sqrtf(powf(b, 2) - 4*a*c))/(2*a); // 
+  
   // calculate individual motor control parameters used in interrupts
-  float max_speed_SPS = abs((-b + sqrtf(powf(b, 2) - 4*a*c))/(2*a)); // 
-  motor_ptr->acc_pos_pulses = SPR_TO_PPR * powf(max_speed_SPS, 2)/(2*TRAJECTORY_ACCELERATION_SPSPS);
-  motor_ptr->const_spd_pos_pulses = motor_ptr->acc_pos_pulses + (SPR_TO_PPR * ((delta_pos_steps * max_speed_SPS) / trajectory_motor_params->avg_speed_sps - 2* powf(max_speed_SPS, 2)/TRAJECTORY_ACCELERATION_SPSPS));
+  motor_ptr->acc_pos_pulses = SPR_TO_PPR * (trajectory_motor_params->initial_pos_steps + motor_ptr->direction*powf(max_speed_SPS, 2)/(2*TRAJECTORY_ACCELERATION_SPSPS));
+  motor_ptr->const_spd_pos_pulses = motor_ptr->acc_pos_pulses + (SPR_TO_PPR * ( delta_pos_steps * max_speed_SPS / trajectory_motor_params->avg_speed_sps - 2*powf(max_speed_SPS, 2)/TRAJECTORY_ACCELERATION_SPSPS));
   motor_ptr->dec_pos_pulses = trajectory_motor_params->target_pos_steps * SPR_TO_PPR;
   motor_ptr->speed_increment = ((ACCELERATION_INTERRUPT_INTERVAL * TRAJECTORY_ACCELERATION_SPSPS) / QTIMER_FREQ_HZ) + 1; // constant slope of trapezoidal profile
   motor_ptr->current_steps_per_sec = MIN_SPS;
