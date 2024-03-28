@@ -36,6 +36,7 @@ QueueHandle_t motor_traj_queue = xQueueCreate(QUEUE_MAX_LENGTH, 20);
 LoggerQueueMessage logger_queue_message;
 u_serial_message COM_message;
 CircularBuffer serial_buffer;
+Trajectory_Params_t motor_traj_message;
 
 void SerialThread(void* arg){
   
@@ -102,8 +103,6 @@ void SerialThread(void* arg){
             // parameters_valid = false;
           break;
           case STRETCH_TO_MAX:    // cmd_byte0 = 4
-            // initialize message for motor trajectory
-            Trajectory_Params_t motor_traj_message;
 
             // if membrane parameters valid and no messages in queue
             if(parameters_valid && !xQueuePeek(motor_traj_queue, (Trajectory_Params_t *) &motor_traj_message, 0)){
@@ -130,8 +129,6 @@ void SerialThread(void* arg){
             }
           break;
           case RETURN_TO_ZERO:    // cmd_byte0 = 5
-            // initialize message for motor trajectory
-            Trajectory_Params_t motor_traj_message;
 
             // if membrane parameters valid and no messages in queue
             if(parameters_valid && !xQueuePeek(motor_traj_queue, (Trajectory_Params_t *) &motor_traj_message, 0)){
@@ -158,8 +155,6 @@ void SerialThread(void* arg){
             }
           break;
           case CYCLIC_STRETCHING: // cmd_byte0 = 6
-            // initialize message for motor trajectory
-            Trajectory_Params_t motor_traj_message;
 
             // if membrane parameters valid and no messages in queue
             if(parameters_valid && !xQueuePeek(motor_traj_queue, (Trajectory_Params_t *) &motor_traj_message, 0)){
@@ -234,9 +229,6 @@ void SerialThread(void* arg){
           break;
           case STOP:              // cmd_byte0 = 7
             digitalWrite(LED_BUILTIN, LOW);
-
-            // initialize message for motor trajectory
-            Trajectory_Params_t motor_traj_message;
 
             // clear trajectory queue to stop any new movements
             while(xQueueReceive(motor_traj_queue, (Trajectory_Params_t *) &motor_traj_message, 0));

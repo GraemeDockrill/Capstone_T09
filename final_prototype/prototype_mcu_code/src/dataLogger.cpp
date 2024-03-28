@@ -61,9 +61,9 @@ void LoggingDataReadThread(void* arg){
     logger_queue_message.data1 = y3;
     logger_queue_message.data2 = y2;
     logger_queue_message.data3 = encoder1.read();
-    logger_queue_message.data4 = encoder1.read()>>16;
-    logger_queue_message.data5 = encoder1.read()>>16;
-    logger_queue_message.data6 = encoder1.read()>>16;
+    logger_queue_message.data4 = encoder2.read();
+    logger_queue_message.data5 = encoder3.read();
+    logger_queue_message.data6 = encoder4.read();
 
     // enqueue message for serial thread
     xQueueSend(data_logger_queue, (u_serial_message *) &logger_queue_message, 0);
